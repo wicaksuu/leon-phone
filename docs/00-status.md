@@ -370,6 +370,40 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       cuma form filter kosong sebelum submit, minim info baru. Kalau perlu detail
       laporan spesifik nanti, audit ulang halaman itu saja saat itu.
 
+21. **Koreksi kejujuran atas klaim "SELESAI" di #20** — user tanya eksplisit "apakah
+    semua halaman sudah 100%, termasuk inputan waktu tambah?" dan jawabannya waktu itu
+    TIDAK. Yang benar-benar tercapai di #20 cuma kolom **listing** (tabel), BUKAN field
+    form **"Tambah Data"** (create record baru) — itu 2 hal beda. Setelah ditegur,
+    ditindaklanjuti sebagian:
+    - Ditemukan pola: tombol "+" tiap listing kadang `href` langsung ke `add{Nama}`,
+      kadang lewat JS `onclick="otorisasiAdd()"` (cek otorisasi mundur-tanggal dulu).
+      42 URL "Tambah" berhasil diidentifikasi dari HTML tersimpan (grep, bukan fetch
+      ulang — hemat).
+    - **Temuan bug di kode SISCOM sendiri**: 10 halaman transaksi (`piListing`,
+      `siListing`, `apPaymentListing`, `arReceiptListing`, `poCloseListing`,
+      `pqCloseListing`, `soCloseListing`, `sqCloseListing`, `prListing`, `roListing`)
+      semua py `otorisasiAdd()` yang redirect ke `addPo` — kemungkinan besar
+      copy-paste bug (fungsi disalin dari halaman PO, lupa update tujuan). URL-nya
+      TIDAK dipakai/dipercaya untuk audit field.
+    - Dari 42 URL, baru **13 yang benar-benar di-fetch detail field-nya**:
+      `addGoods`, `addWh`, `addStockOpname`, `addTransferWh`, `addAdjustStock`,
+      `addSupp`, `addPq`, `addCust`, `addSo`, `addCoa`, `addFa`, `addPayType`, `addCc`.
+      Hasil → `docs/siscom-reference/03-add-form-fields.md`. Temuan baru penting:
+      Master Barang py **Multi Satuan** (konversi unit, GAP vs skema kita yang cuma 1
+      Satuan/produk), COA py **6 segmen akun + Cost Centre wajib + Anggaran/Thn**
+      (budgeting terintegrasi — GAP baru), Fixed Assets py **jadwal depresiasi
+      otomatis** (Periode Susut, Penyusutan per bulan, posting DR/CR otomatis).
+    - **29 URL lain sudah diidentifikasi tapi field-nya BELUM diambil.** ~21 halaman
+      lagi (userListing, branchListing, dll) bahkan URL "Tambah"-nya belum
+      teridentifikasi (grep otomatis tidak menangkap polanya).
+    - **Edit form**: cuma 1 dari 82 halaman yang PERNAH dibuka (Master Barang, manual,
+      sebelum dihapus di #20). 81 form edit lainnya belum pernah disentuh sama sekali.
+    - **Kesimpulan jujur untuk sesi berikutnya**: audit BELUM 100% lengkap. Kalau user
+      minta lanjut, kerjaan yang tersisa ada di
+      `docs/siscom-reference/03-add-form-fields.md` § "Belum diverifikasi"/"Belum sama
+      sekali" — lanjutkan dari situ, JANGAN klaim selesai lagi sebelum benar-benar
+      dicek ulang menyeluruh (create form + edit form, bukan cuma listing).
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di
