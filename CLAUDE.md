@@ -127,3 +127,7 @@ Yang sudah masuk sejauh ini:
   utk Fase 3 — lihat `docs/07-roadmap.md`)
 - Apakah operasional Leon Phone transaksi pakai Cheque/Giro (fitur ada di SISCOM,
   relevan utk Fase 5 — lihat `docs/07-roadmap.md`)
+- Pola Approval Workflow: ikut SISCOM (step-up authorization SINKRON — supervisor login
+  modal di tempat, transaksi lanjut seketika) atau tetap pola async kita (request→pending
+  →approve nanti), atau dukung dua-duanya — lihat
+  `docs/siscom-reference/05-business-logic.md` § Pola Approval, `docs/00-status.md` #27

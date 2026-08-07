@@ -252,7 +252,13 @@ Detail struktur data → `04-database.md`. Barang **tanpa** identifier individua
 
 - **Audit Log** — siapa, kapan, apa yang berubah (before/after), **py Log IP**.
 - **Approval Workflow** — perubahan harga, pembatalan transaksi, retur, stock adjustment,
-  buka kunci periode.
+  buka kunci periode. **Temuan dari extract logic JS SISCOM asli**
+  (`docs/siscom-reference/05-business-logic.md` § Pola Approval): SISCOM pakai **step-up
+  authorization SINKRON** (supervisor login on-the-spot lewat modal password terpisah,
+  transaksi lanjut seketika), BUKAN antrian approval async spt `approval_requests` di
+  `04-database.md`. **Perlu diputuskan user** sebelum Fase 1 selesai: ikut pola sync
+  SISCOM, tetap pakai pola async kita, atau dukung dua-duanya (sync utk gate real-time
+  spt harga di POS/kasir, async utk yg wajar ditunda spt buka kunci periode).
 - **Riwayat Harga** — histori harga beli & harga jual per produk/varian.
 - **Label Barcode & QR Code** — cetak label dgn template custom (ukuran kertas, posisi).
 - **Import/Export Excel** — master data, stok, transaksi.

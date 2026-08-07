@@ -41,15 +41,20 @@
    sudah diresolve via URL pengganti terverifikasi).
 4. `04-edit-form-fields.md` — field form "Edit" (ubah data), 21/82 halaman terverifikasi
    + daftar lengkap modul yang terkonfirmasi kosong (bukan gagal diaudit).
-5. `html/` — **HTML mentah 143 halaman** (82 listing + 42 add-form + 21 edit-form, hasil
-   `fetch()` langsung, sebelum di-parse).
+5. `05-business-logic.md` — **BARU** (`docs/00-status.md` #27): logic kalkulasi &
+   validasi, dipisah tegas EXTRACTED (kutipan langsung dari JS client-side asli, py
+   sumber file+fungsi) vs PREDICTED (disimpulkan, belum terverifikasi — mis. formula
+   depresiasi Fixed Assets karena `addFa` tidak py JS sama sekali). Baru cakupan kecil
+   (~12 fungsi), akan terus bertambah sesuai kebutuhan fase implementasi.
+6. `html/` — **HTML mentah 143 halaman** (82 listing + 42 add-form + 21 edit-form, hasil
+   `fetch()` langsung, sebelum di-parse). Sumber logic di atas juga digali dari sini.
    **TIDAK di-commit ke git** (lihat `.gitignore` — isu hak cipta/ToS aplikasi pihak
    ketiga + ukuran ~14MB), tersimpan LOKAL saja di mesin ini. Nama file: `siscom_
    {slug-url}.html` (mis. `siscom_goodsListing.html`). Buka file ini kalau butuh detail
    struktur yang tidak tertangkap ringkasan `01-field-inventory.md` (mis. urutan visual
    form, class CSS, JS inline). Kalau sesi berikutnya jalan di MESIN LAIN, folder ini
    tidak akan ada — cuma sumber kebenaran mentahnya `01-field-inventory.md`.
-6. Field generik `Doe/Toe/Loe/Deo/Actions` yang muncul di HAMPIR SEMUA tabel SISCOM
+7. Field generik `Doe/Toe/Loe/Deo/Actions` yang muncul di HAMPIR SEMUA tabel SISCOM
    **sengaja tidak dicatat berulang** di `01-field-inventory.md` — itu kolom audit-trail
    generik bawaan framework SISCOM (kemungkinan: Date-of-entry/Time-of-entry/Log-of-entry/
    Date-of-edit), setara `created_at`/`updated_at`/`created_by` kita, bukan field bisnis.

@@ -589,6 +589,42 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       BENAR secara struktur/lengkap (requirement "sama dgn yang lama"), tapi jangan
       heran alur2 formal itu jarang dipakai di praktik nyata Leon Phone nanti.
 
+27. **Perluasan scope: LOGIC juga wajib sama, bukan cuma field/tabel.** User: *"ga cuman
+    itu aja logic juga akan ikut meskipun jatuhnya memprediksi ya tapi saya ingin hasilnya
+    benar benar sama"*. Ditemukan cara efektif: SISCOM aplikasi jQuery lama yang render
+    kalkulasi/validasi di CLIENT-SIDE sebelum submit — banyak formula asli bisa
+    **diekstrak langsung dari JS** di HTML tersimpan (`html/`), bukan cuma ditebak.
+    - **Dokumen baru**: `docs/siscom-reference/05-business-logic.md` — pisah tegas
+      EXTRACTED (kutipan langsung, py sumber file+fungsi, bisa diverifikasi ulang) vs
+      PREDICTED (murni disimpulkan, ditandai eksplisit belum terverifikasi — mis. formula
+      depresiasi Fixed Assets karena `addFa.html` **tidak py JS sama sekali**, semua
+      server-side).
+    - **Metode ekstraksi**: python script brace-matching cari `function {nama}(...) {...}`
+      di HTML tersimpan, buang array/object literal besar (data tenant riil spt daftar
+      1000+ kode barang yg ke-embed di beberapa fungsi — sengaja dibuang dari dokumentasi,
+      bukan logic, cuma bikin dokumen bengkak + berpotensi bocor data riil tenant).
+    - **Temuan arsitektur PALING PENTING**: pola Approval Workflow SISCOM ternyata
+      **SINKRON** (supervisor login modal terpisah di tempat, transaksi lanjut seketika
+      setelah verifikasi sukses) — BUKAN pola async (request→pending→approve nanti) spt
+      `approval_requests` di `04-database.md` kita. Ini **butuh keputusan user** sebelum
+      Fase 1 kelar — sudah ditambahkan sbg catatan eksplisit di `02-modules.md` §
+      fitur lintas-modul & `CLAUDE.md` § Belum diputuskan.
+    - **Temuan lain yg diekstrak** (lihat file baru untuk detail lengkap + kutipan kode):
+      formula Netto Faktur Penjualan (`Netto = (Totprice-Discount)+PPN+Ongkos-Poin`, PPN
+      dihitung SETELAH diskon), 2 gate harga terpisah di Penjualan (Min Jual & Std Jual,
+      beda parameter otorisasi), gate harga+stok gabungan di Pembelian (Std Beli & Max
+      Stok), gate stok fisik di DO (kecuali tipe barang "3"/kemungkinan jasa), gate limit
+      kredit customer 2 lapis (piutang overdue vs sisa limit) di DO, validasi retur (IMEI
+      blm cukup matang statusnya = blokir, IMEI beda produk = soft warning, IMEI tidak
+      dikenal = soft warning bukan hard block), kolom `FLAG` numerik di histori unit yg
+      jadi dasar banyak gate (state-machine berjenjang, bukan enum datar — sudah dicatat
+      implikasinya di `04-database.md` § serial_units).
+    - **Belum ditelusuri**: baru ~12 fungsi dari puluhan yg ada per halaman. Rekomendasi
+      eksplisit di dokumen baru: gali lebih lanjut PER MODUL saat mulai implementasi
+      fase terkait (`docs/07-roadmap.md`), bukan borong semua sekaligus sekarang —
+      channel waktu abis kalau extract semua fungsi di 143 file sekarang tanpa tahu mana
+      yg benar2 dibutuhkan duluan.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di

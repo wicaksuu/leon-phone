@@ -90,6 +90,19 @@ kebenaran tetap `serial_unit_histories`. Kalau ada bug ketidaksesuaian, rebuild
 `current_status` dari histori, jangan pernah edit `current_status` manual tanpa entry
 histori baru.
 
+> **Temuan dari extract logic JS SISCOM** (`docs/siscom-reference/05-business-logic.md`
+> § SR/RO/AdjustStock): SISCOM sendiri pakai kolom numerik `FLAG` di histori unit yang
+> jadi GERBANG buat berbagai aksi via perbandingan threshold (`FLAG < 6` blokir retur unit
+> yg belum "cukup matang" statusnya, `FLAG != 8` blokir duplikat di Receive, `FLAG <= 5`
+> blokir duplikat di Stock Adjustment). Kita **tidak perlu niru angka literalnya** (peta
+> lengkap 0-N SISCOM belum diketahui, cuma beberapa titik ambang yg ketemu), tapi enum
+> `current_status` di atas **harus punya TOTAL ORDER yg jelas** (bisa dibandingkan
+> `<`/`>`, bukan cuma dicek `==`) supaya gate serupa (mis. "retur cuma boleh kalau status
+> sudah minimal delivered") bisa direplikasi dgn cara yg sama. Pertimbangkan tambah kolom
+> `status_rank` (integer) di samping `current_status` (enum readable) kalau perbandingan
+> ordinal ini sering dipakai — enum PHP native bisa juga diberi backed value integer utk
+> keperluan ini tanpa kolom terpisah.
+
 ### Stock (agregat, terpisah dari serial_units untuk barang tanpa identifier individual
 seperti aksesoris)
 ```
