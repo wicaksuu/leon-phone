@@ -4,6 +4,14 @@
 > instalasi Laravel dimulai — lihat `docs/00-status.md` #14. Konvensi di bawah ini sama
 > persis berlakunya untuk MySQL 8.0 (semuanya fitur standar `InnoDB`/`utf8mb4`, tidak ada
 > yang MariaDB-spesifik).
+>
+> **Pivot besar** (`docs/00-status.md` #26): skema di bawah sekarang menyerap SEMUA
+> temuan audit SISCOM (`docs/siscom-reference/`) — tujuannya replikasi fitur penuh, bukan
+> versi simplifikasi. Tabel/kolom baru dari audit ditandai eksplisit di tiap section.
+> Kolom `product_variants`/produk perlu tambahan: `is_pos_eligible` (flag POS), `jenis`,
+> `fast_slow_dead_moving_threshold`, `earns_loyalty_points` (flag CRM), `tax_code_id`
+> (FK, dari Kelompok Barang) — detail lengkap field produk → `02-modules.md` §1 dan
+> `docs/siscom-reference/03-add-form-fields.md`/`01-field-inventory.md`.
 
 ## Konvensi umum
 
@@ -128,17 +136,25 @@ audit_logs
   old_values (json), new_values (json), created_at
 ```
 
-### Akuntansi (lihat `02-modules.md` §18)
+### Akuntansi (lihat `02-modules.md` §5 — struktur berikut mengikuti SISCOM 1:1,
+hasil audit `docs/siscom-reference/`, BUKAN skema flat sederhana draf awal)
 ```
+cost_centres
+  id, tenant_id, code, name, is_active
+
 chart_of_accounts
-  id, tenant_id, code, name, type (enum: asset/liability/equity/revenue/expense),
-  parent_id (nullable, untuk sub-akun), is_active
+  id, tenant_id, code, name, level (1-6), segment_1..segment_6 (kolom as1-as6 SISCOM —
+  6 segmen kode hierarkis, BUKAN cuma code+parent_id flat), type (enum: asset/liability/
+  equity/revenue/expense), is_header (H/D — header/parent vs detail/leaf, dipakai buat
+  hierarki tampilan), cost_centre_id (FK, WAJIB — konfirmasi SISCOM: setiap akun harus
+  py Cost Centre), annual_budget (nullable, "Anggaran/Thn" — budgeting terintegrasi
+  langsung ke COA, bukan modul terpisah), is_active
 
 journal_entries        -- header, append-only setelah posted (edit = entri koreksi baru)
-  id, tenant_id, entry_number (unique per tenant_id), entry_date, accounting_period_id,
-  reference_type, reference_id (nullable, polymorphic ke Order/PurchaseOrder/dll kalau
-  jurnal ini auto-generated dari transaksi modul lain), memo, status (draft/posted),
-  created_by, created_at
+  id, tenant_id, entry_number (unique per tenant_id, "Voucher"), entry_date,
+  accounting_period_id, reference_type, reference_id (nullable, polymorphic ke
+  Order/PurchaseOrder/dll kalau jurnal ini auto-generated dari transaksi modul lain),
+  memo, status (draft/posted), created_by, created_at
 
 journal_lines
   id, tenant_id, journal_entry_id, account_id (FK chart_of_accounts), debit, credit,
@@ -148,13 +164,161 @@ accounting_periods
   id, tenant_id, name (mis. "Agustus 2026"), start_date, end_date,
   status (enum: open/closed/locked), closed_by (nullable), closed_at (nullable)
 
-opening_balances        -- Saldo Awal, satu kali setup per tenant per periode awal
-  id, tenant_id, account_id, accounting_period_id, amount (debit positif, credit negatif
-  atau kolom debit/credit terpisah — diputuskan saat desain migration Fase 5)
+fiscal_years            -- Tutup Buku (year-end) TERPISAH dari Tutup Periode (month-end)
+  id, tenant_id, name, start_date, end_date, status (enum: open/closed),
+  closed_by (nullable), closed_at (nullable)
+
+fixed_assets            -- Aktiva Tetap, depresiasi OTOMATIS terjadwal
+  id, tenant_id, code, branch_id, account_id (FK chart_of_accounts, "ACNO" — CATATAN:
+  di SISCOM field ini kemungkinan cuma teks bebas tidak divalidasi ke chart_of_accounts
+  riil, lihat docs/siscom-reference/04-edit-form-fields.md § coaListing; putuskan saat
+  desain migration apakah kita perketat jadi FK asli atau tetap longgar spt SISCOM),
+  name, acquisition_date, book_value, depreciation_period (bulan), depreciation_months,
+  debit_account_id (FK, "Posting [DR]"), credit_account_id (FK, "Posting [CR]"),
+  created_at
+
+recurring_postings       -- "Recurring", field HAMPIR IDENTIK fixed_assets (SISCOM
+                             kemungkinan implementasi sbg varian mesin depresiasi yg sama)
+  id, tenant_id, code, branch_id, account_id, name, schedule_period, book_value,
+  debit_account_id, credit_account_id, created_at
+
+opening_balances        -- Saldo Awal — SISCOM py 4 KATEGORI TERPISAH, bukan cuma akun:
+  -- (1) opening_balance_inventory (per Supplier), (2) opening_balance_payables (AP),
+  -- (3) opening_balance_receivables (AR), (4) opening_balance_accounts (COA/Neraca).
+  -- Skema di bawah generik untuk kategori (4); kategori (1)-(3) lihat tabel Purchasing/
+  -- Sales/masing-masing modul (opening stock/AP/AR = transaksi awal, bukan baris di
+  -- tabel akun ini).
+  id, tenant_id, account_id, accounting_period_id, debit, credit
 ```
 `journal_lines` total debit harus sama dengan total credit per `journal_entry_id` —
 invariant double-entry ini divalidasi di **Service**, bukan constraint DB literal (sama
-pola dengan invariant serial_units↔Stock di atas).
+pola dengan invariant serial_units↔Stock di atas). Validasi ini **real-time di form**
+(`selisih` = 0 sebelum submit), bukan cuma di-cek saat save.
+
+### Purchasing (lihat `02-modules.md` §2 — alur formal 5-dokumen, 3-way matching)
+```
+purchase_requests (PQ)
+  id, tenant_id, number (unique per tenant), branch_id, date, ppn_flag, status
+  (draft/closed), created_by
+
+purchase_orders (PO)
+  id, tenant_id, number, branch_id, supplier_id, date, status (enum: open/closed —
+  "Tutup" eksplisit, partial fulfillment, TIDAK linear otomatis)
+
+goods_receipts (RO/Nota Penerimaan Barang)  -- independen dari Invoice, 3-way matching
+  id, tenant_id, number, branch_id, supplier_id, purchase_order_id (nullable), date,
+  ppn_flag, due_date, installment_schedule (json, kalender bulan/termin)
+
+purchase_invoices (PI/Faktur Pembelian)
+  id, tenant_id, number, branch_id, supplier_id, goods_receipt_id (nullable), date,
+  reference, due_date, ppn_flag, status
+
+purchase_returns (PR/Retur Pembelian)
+  id, tenant_id, number, branch_id, supplier_id, based_on_type, based_on_id (WAJIB —
+  retur SELALU merujuk transaksi asal spesifik, tidak pernah retur bebas), date
+```
+Supplier (di `tenants`/master data) tambah kolom: `npwp`, `credit_limit`, `down_payment`,
+`limit_remaining`, `entity_type` (enum: b2b/cash_user/marketplace/fintech — Supplier bisa
+jadi entitas non-formal spt Blibli/Akulaku, bukan selalu B2B).
+
+### Sales (lihat `02-modules.md` §3 — simetris Purchasing)
+```
+sales_quotes (SQ)          -- Penawaran
+  id, tenant_id, number, branch_id, customer_id, date, status
+
+sales_orders (SO)
+  id, tenant_id, number, branch_id, customer_id, sales_quote_id (nullable, "Pilih SQ" —
+  link eksplisit ke Quote asal), discount, ppn_percent, shipping_cost, netto,
+  status (enum: open/closed)
+
+delivery_orders (DO)
+  id, tenant_id, number, branch_id, customer_id, sales_order_id (nullable), date
+  -- serial_unit scan terjadi DI SINI (lihat delivery_order_items di bawah), BUKAN di
+  -- sales_invoices — konfirmasi live audit field `listimei`/`tempflagimei` di addDo.
+
+delivery_order_items
+  id, tenant_id, delivery_order_id, product_variant_id, serial_unit_id (nullable), qty
+
+sales_invoices (SI/Faktur Penjualan)
+  id, tenant_id, number, branch_id, customer_id, salesman_id, delivery_order_id
+  (nullable), date, reference, customer_po_number ("nopj"), due_date,
+  installment_schedule (json)
+
+sales_returns (SR/Retur Penjualan)
+  id, tenant_id, number, branch_id, customer_id, salesman_id,
+  based_on_type, based_on_id (WAJIB, "Berdasarkan" + "Pilih Faktur SI")
+
+sales_return_items
+  id, tenant_id, sales_return_id, product_variant_id, serial_unit_id (nullable), qty
+```
+Customer tambah kolom: `credit_limit`, `receivable_balance`, `down_payment`,
+`limit_remaining`, `price_group_id` (FK ke `sales_price_groups`, "Kelompok Harga"),
+`region` ("Wilayah", dimensi laporan terpisah dari `customer_group_id`).
+
+`sales_price_groups` — Kode, Nama (multi-tier pricing).
+`customer_groups` / `supplier_groups` — Kode, Status, Inisial, Tipe.
+`salesmen` — Kode, Status, `is_non_sales` (flag "Non Sales"), `branch_id`.
+
+### Keuangan (lihat `02-modules.md` §4)
+```
+down_payments            -- AP & AR Down Payment, dokumen TERPISAH dari Payment/Receipt
+  id, tenant_id, type (enum: ap/ar), number, party_type, party_id (Supplier/Customer),
+  invoice_reference
+
+payments                 -- AP Payment / Cash-Bank Payment (generik lewat `type`)
+  id, tenant_id, type (enum: ap_payment/cash_bank_payment), voucher_number, branch_id,
+  date, party_id (nullable, Supplier utk AP), account_id (nullable, "Kode Akun" utk
+  Cash-Bank), paid_to (nullable, "Dibayar Kepada"), giro_number (nullable),
+  giro_due_date (nullable), giro_amount (nullable), total
+
+payment_lines             -- Detail multi-baris (Cash/Bank Payment bisa split ke
+                              beberapa akun sekaligus dalam 1 voucher)
+  id, tenant_id, payment_id, account_id, amount, notes
+
+receipts                  -- AR Receipt / Cash-Bank Receipt (simetris payments)
+  id, tenant_id, type (enum: ar_receipt/cash_bank_receipt), voucher_number, branch_id,
+  date, party_id (nullable, Customer), account_id (nullable), received_from (nullable),
+  giro_number (nullable), giro_due_date (nullable), giro_amount (nullable),
+  giro_description (nullable, "ketgiro1"), total
+
+receipt_lines
+  id, tenant_id, receipt_id, account_id, amount, notes
+
+payment_types             -- Tipe Bayar
+  id, tenant_id, code, is_active, is_pos (boleh dipakai kasir), is_card, is_down_payment,
+  group_id, account_no, account_receivable, account_payable, account_discount,
+  account_rounding  -- 5 mapping akun COA berbeda per tipe bayar (Acno/Achtg/Acptg/
+                        Aclsk/Acrsk)
+
+banks
+  id, tenant_id, code, account_no, account_debit, account_credit, account_credit2,
+  account_cancel  -- mapping akun bank (Acno/Acdb/Ackr/Accr/Acbatal)
+
+bank_transactions
+  id, tenant_id, voucher_number, branch_id, date, bank_id, transaction_type,
+  cheque_giro_id (FK, WAJIB — "Pilih Giro")
+
+cheques_giros              -- lifecycle sendiri: Tolak, Batal, jatuh tempo
+  id, tenant_id, number, branch_id, amount, date, party_id (nullable, Customer),
+  status (enum: active/rejected/cancelled/due), due_date
+```
+
+### Multi Satuan (konversi unit — GAP yg ditutup, product_variants punya >1 satuan)
+```
+product_units
+  id, tenant_id, product_variant_id, unit_id (FK master satuan), conversion_ratio
+  (mis. 1 box = 12 pcs → ratio 12 relatif ke satuan dasar), is_base_unit
+```
+
+### Group Cabang (hierarki tambahan DI ATAS Cabang — belum ada di `08-tenancy.md`
+saat ini, perlu didesain ulang hierarki jadi PT → Group Cabang (opsional) → Cabang →
+Gudang kalau fitur ini diadopsi)
+```
+branch_groups
+  id, tenant_id, name, code
+```
+`branches` tambah kolom nullable: `branch_group_id`, `npwp` (NPWP di level Cabang, bukan
+cuma Tenant/PT).
 
 ## Prinsip
 

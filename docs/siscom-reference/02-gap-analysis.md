@@ -115,6 +115,10 @@ lebih sederhana dari SISCOM (gap sebagian) · ❌ = konsep TIDAK ADA sama sekali
 - No. Meja di POS (kemungkinan sisa dari template F&B SISCOM, tidak relevan HP)
 - Recurring Journal
 
-**Semua ini perlu dikonfirmasi ke user satu-satu sebelum mengubah `docs/02-modules.md` /
-`docs/04-database.md`** — dokumen ini cuma MENUNJUKKAN gap-nya, bukan memutuskan gap mana
-yang harus ditutup.
+> **UPDATE (`docs/00-status.md` #26)**: keputusan final user BUKAN adopsi selektif seperti
+> kerangka "prioritas" di atas — user memutuskan **replikasi fitur penuh** ("copas
+> sistemnya... semua fitur sama dengan yang lama/SISCOM"), UI/UX saja yang dimodernkan.
+> Semua gap ❌/⚠️ di atas **sudah diserap** ke `docs/02-modules.md` dan `docs/04-database.md`
+> (per modul, bukan per-baris — cek langsung ke dokumen itu untuk detail final). Section
+> "Ringkasan prioritas" di atas jadi **historis** (menunjukkan urutan berpikir sebelum
+> keputusan final), bukan panduan aktif lagi — jangan pakai buat memutuskan skip fitur.

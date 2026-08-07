@@ -50,7 +50,10 @@ Detail lengkap tiap keputusan → `docs/03-architecture.md`.
 
 - `docs/00-status.md` — **baca ini duluan**: log keputusan + status terkini, resume point
 - `docs/01-vision.md` — kenapa RMS bukan POS, siapa pemakainya (§ single-tenant di dalamnya sudah usang, lihat catatan riwayat di atas)
-- `docs/02-modules.md` — daftar & detail 18 modul (Dashboard s/d Akuntansi)
+- `docs/02-modules.md` — daftar & detail modul, terstruktur mengikuti SISCOM langsung
+  (Dashboard, Persediaan, Pembelian, Penjualan, Keuangan, Akuntansi, Utiliti, Saldo Awal,
+  Help) + modul tambahan Leon Phone (Marketplace, POS Kasir, Packing Station, dll) — lihat
+  `docs/00-status.md` #26 kenapa strukturnya diganti dari abstraksi 18-modul lama
 - `docs/03-architecture.md` — struktur folder `Modules/*`, konvensi Actions/DTOs/Services, pilihan teknis Blade vs Livewire
 - `docs/04-database.md` — konvensi MySQL 8.0, entitas kunci (tenant/PT/Cabang, serial unit lifecycle IMEI/SN, stock states, order status, akuntansi), naming convention
 - `docs/05-coding-standards.md` — **wajib dibaca sebelum nulis kode apapun**: error handling, DB transaction/rollback, testing
@@ -120,3 +123,7 @@ Yang sudah masuk sejauh ini:
 - Integrasi marketplace mana yang jadi prioritas pertama (Shopee/Tokopedia/TikTok/dll)
 - Payment gateway untuk QRIS/transfer otomatis
 - Apakah butuh printer thermal driver khusus atau cukup browser print
+- Apakah Leon Phone PKP dan wajib E-Faktur elektronik (fitur ada di SISCOM, relevan
+  utk Fase 3 — lihat `docs/07-roadmap.md`)
+- Apakah operasional Leon Phone transaksi pakai Cheque/Giro (fitur ada di SISCOM,
+  relevan utk Fase 5 — lihat `docs/07-roadmap.md`)

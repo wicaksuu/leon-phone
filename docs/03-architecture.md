@@ -2,27 +2,33 @@
 
 ## Struktur folder modular
 
+> **Pivot** (`docs/00-status.md` #26): nama modul sekarang mengikuti struktur SISCOM
+> langsung (lihat `02-modules.md`), bukan abstraksi lama (`Order/`, `Finance/` generik,
+> dst). `SerialNumber/`, `Marketplace/`, `Pos/`, `Packing/`, `Return/`, `Warranty/`,
+> `Service/`, `Crm/` tetap ada — itu modul TAMBAHAN Leon Phone di luar cakupan SISCOM
+> (`02-modules.md` § Tambahan Leon Phone), bukan dihapus.
+
 ```
 Modules/
 ├── Shared/          ← BelongsToTenant trait, TenantContext, DomainException base, dst — lihat 08-tenancy.md
 ├── Dashboard/
-├── MasterData/
-├── Inventory/
-├── SerialNumber/      ← eks "Imei/", digeneralisasi (docs/00-status.md #18): IMEI cuma satu tipe identifier
-├── Marketplace/
-├── Order/
-├── Pos/
-├── Packing/
-├── Return/
-├── Warranty/
-├── Service/
-├── Crm/
-├── Purchasing/
-├── Finance/
-├── Accounting/       ← modul baru, lihat 02-modules.md §18
+├── Persediaan/        ← eks Inventory + MasterData produk — Master Barang, Gudang, Stok Opname, Transfer, Adjustment, Perakitan
+├── SerialNumber/      ← eks "Imei/", lintas-modul (Persediaan/Penjualan/Purnajual) — konsep, bukan modul SISCOM
+├── Pembelian/          ← eks Purchasing — PQ→PO→RO→PI→Retur, Supplier
+├── Penjualan/           ← eks Order — SQ→SO→DO→SI→Retur, Customer, Salesman, Promo
+├── Marketplace/          ← tambahan Leon Phone, bukan dari SISCOM
+├── Pos/                   ← tambahan Leon Phone
+├── Packing/                ← tambahan Leon Phone
+├── Return/                  ← tambahan Leon Phone (SISCOM py Retur Pembelian/Penjualan sbg dokumen transaksi, bukan modul Purnajual terpisah)
+├── Warranty/                 ← tambahan Leon Phone
+├── Service/                    ← tambahan Leon Phone
+├── Crm/                          ← tambahan Leon Phone
+├── Keuangan/                      ← eks Finance — AP/AR Payment/Receipt/DownPayment, Cash/Bank, Tipe Bayar, Cheque/Giro
+├── Akunting/                       ← eks Accounting — COA (6-segmen+CostCentre), Jurnal, GL, Fixed Assets, Recurring, Saldo Awal, Tutup Periode/Buku
+├── Utiliti/                         ← Setting Cabang/Default/Password/MenuUser, Maintenance/Validasi Data, Buka Kunci
 ├── Hr/
 ├── Report/
-└── Setting/
+└── HelpTools/                        ← Kroscek IMEI, Min Stock, HPP Stock, dll — utility/diagnostic
 ```
 
 Setiap modul (kecuali yang murni read-only seperti Report) punya sub-folder standar:
@@ -67,11 +73,11 @@ Seluruh UI dibangun menggunakan **Tailwind CSS 4 + DaisyUI 5** dengan tata letak
 | Layar kasir dengan keyboard shortcut, split payment, real-time calculation | | ✅ |
 | Real-time dashboard widgets (counters, live feed) | | ✅ |
 
-Modul yang **sebagian besar menggunakan Blade View**: Master Data (CRUD dasar), Purchasing (management PO), Finance, Akuntansi (COA, Jurnal), HR (kelola user/karyawan), Setting.
+Modul yang **sebagian besar menggunakan Blade View**: Persediaan (master data CRUD), Pembelian (management PQ/PO/RO/PI), Keuangan, Akunting (COA, Jurnal, Fixed Assets), HR, Utiliti.
 
-Modul yang **sebagian besar menggunakan Livewire Component**: POS Kasir, Packing Station, Layar scan serial unit saat Barang Masuk (Receive) dan Stock Opname, serta Dashboard interaktif.
+Modul yang **sebagian besar menggunakan Livewire Component**: POS Kasir, Packing Station, Layar scan serial unit saat Receive (RO) dan Stock Opname, serta Dashboard interaktif.
 
-Modul campuran: Order Management (list order menggunakan Blade view, tapi halaman detail/aksi cepat seperti picking menggunakan Livewire); Marketplace (konfigurasi & log = Blade view, webhook ingestion = job/queue).
+Modul campuran: Penjualan (list SO/SI menggunakan Blade view, tapi halaman detail/aksi cepat seperti picking menggunakan Livewire); Marketplace (konfigurasi & log = Blade view, webhook ingestion = job/queue).
 
 ## Marketplace Engine
 

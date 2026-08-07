@@ -540,6 +540,55 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       verifikasi ganda (POST reconstruction + klik live) supaya jelas ini bukan
       asumsi/tebakan.
 
+26. **PIVOT BESAR: replikasi fitur SISCOM penuh, bukan adopsi selektif.** User
+    eksplisit mengoreksi arah kerja: *"intinya bukan adopsi lagi, tapi lebih ke arah
+    kita copas sistemnya dengan tampilan yang lebih fresh dan lebih mudah di gunakan
+    jadi semua fitur sama dengan yang lama"* — dan mengklarifikasi "yang lama" = SISCOM
+    (bukan draf blueprint kita sebelumnya). Ini membalik kerangka "Ringkasan prioritas
+    adopt vs defer" di `docs/siscom-reference/02-gap-analysis.md` — semua gap yg
+    sebelumnya ditandai ❌/⚠️ sekarang **diserap semua**, tidak ada yg di-skip. Yang
+    dimodernkan HANYA tampilan/UX (`docs/06-ui-ux-guidelines.md`), bukan cakupan fitur.
+    - Ditanya balik ke user soal struktur modul: ikut struktur SISCOM langsung
+      (Persediaan/Pembelian/Penjualan/Keuangan/Akunting/Utiliti, sama seperti sidebar
+      SISCOM) VS tetap 18-modul abstraksi lama tapi field dilengkapi. **User pilih ikut
+      struktur SISCOM langsung** — alasan: minim ambiguitas/translasi buat AI agent yg
+      nanti coding.
+    - **`docs/02-modules.md` ditulis ulang total**: struktur sekarang persis sidebar
+      SISCOM (Dashboard, Persediaan, Pembelian, Penjualan, Keuangan, Akuntansi, Utiliti,
+      Saldo Awal, Help) + section terpisah "Tambahan Leon Phone" (Marketplace, POS
+      Kasir, Packing Station, Return/Warranty/Service/CRM sbg modul customer-facing) —
+      modul2 ini TIDAK ada di SISCOM tapi tetap dipertahankan karena kebutuhan nyata
+      operasional toko omnichannel, bukan pengurangan dari SISCOM. Setiap section modul
+      sekarang berisi field/flow LENGKAP hasil audit (multi-satuan, COA 6-segmen+Cost
+      Centre, Fixed Assets depresiasi otomatis, alur PQ→PO→RO→PI 3-way matching,
+      SQ→SO→DO→SI dgn scan-serial-di-DO, dst) — bukan versi simplifikasi lama.
+    - **`docs/04-database.md` diperluas signifikan**: tabel baru `cost_centres`,
+      `fixed_assets`, `recurring_postings`, `fiscal_years`, `purchase_requests/orders`,
+      `goods_receipts`, `purchase_invoices`, `purchase_returns`, `sales_quotes/orders`,
+      `delivery_orders(+items)`, `sales_invoices`, `sales_returns(+items)`,
+      `down_payments`, `payments/receipts(+lines)`, `payment_types`, `banks`,
+      `bank_transactions`, `cheques_giros`, `product_units` (multi-satuan),
+      `branch_groups`. `chart_of_accounts` diubah dari flat code+parent_id jadi
+      hierarkis 6-segmen + `cost_centre_id` wajib + `annual_budget`.
+    - **`docs/03-architecture.md`**: nama folder `Modules/*` diganti ikut struktur baru
+      (`Inventory`→`Persediaan`, `Order`→`Penjualan`, `Purchasing`→`Pembelian`,
+      `Finance`→`Keuangan`, `Accounting`→`Akunting`, `Setting`→`Utiliti`,
+      `Report`→ tetap, tambah `HelpTools`) — modul tambahan Leon Phone
+      (`Marketplace/Pos/Packing/Return/Warranty/Service/Crm`) TETAP ADA, ditandai
+      eksplisit sbg "tambahan Leon Phone, bukan dari SISCOM" di komentar folder.
+    - **`docs/07-roadmap.md`**: isi tiap fase diperluas ikut modul/field baru (urutan 5
+      fase TIDAK berubah), ditambah 2 pertanyaan terbuka ke user yg perlu dijawab
+      sebelum Fase 3/5: (a) apakah Leon Phone PKP & wajib E-Faktur? (b) apakah Leon
+      Phone transaksi pakai Cheque/Giro?
+    - **`docs/siscom-reference/02-gap-analysis.md`**: ditambah catatan UPDATE di akhir
+      file, menandai section "Ringkasan prioritas" jadi historis (bukan panduan aktif),
+      supaya sesi berikutnya tidak salah baca dan mengira masih ada opsi "skip".
+    - **Konteks bisnis penting yg dibawa dari #23-25**: walau semua alur formal SISCOM
+      dibangun (PQ/PO/RO/SQ/SO/DO/Cheque-Giro/Journal/dll), data riil tenant "leon"
+      sejauh ini cuma pakai PI+SI+master data langsung — jadi implementasi harus tetap
+      BENAR secara struktur/lengkap (requirement "sama dgn yang lama"), tapi jangan
+      heran alur2 formal itu jarang dipakai di praktik nyata Leon Phone nanti.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di

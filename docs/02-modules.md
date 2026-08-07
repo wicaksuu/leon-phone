@@ -1,157 +1,260 @@
 # 02 — Modules
 
-18 modul, masing-masing = satu folder di `Modules/` (lihat `03-architecture.md`). Urutan di
-sini bukan urutan build — urutan build ada di `07-roadmap.md`. Modul #18 (Akuntansi) baru
-ditambahkan setelah melihat referensi SISCOM ERP, lihat `docs/00-status.md` #5.
+> **Pivot besar** (`docs/00-status.md` #26): struktur modul di bawah ini **mengikuti
+> struktur SISCOM ERP langsung** (hasil audit lengkap di `docs/siscom-reference/`), bukan
+> abstraksi 18-modul buatan sendiri seperti draf sebelumnya. Keputusan user: **"bukan
+> adopsi selektif, tapi copas sistemnya dengan tampilan lebih fresh — semua fitur sama
+> dengan yang lama (SISCOM)"**. Detail field per halaman/form → 4 dokumen di
+> `docs/siscom-reference/` (`01-field-inventory.md` listing, `03-add-form-fields.md`
+> Tambah, `04-edit-form-fields.md` Edit, `02-gap-analysis.md` perbandingan). Dokumen ini
+> adalah RINGKASAN terstruktur dari semua itu — kalau butuh detail field persis, rujuk
+> balik ke `docs/siscom-reference/`.
+>
+> Modul di-organisir persis sidebar SISCOM: **Dashboard, Persediaan, Pembelian, Penjualan,
+> Keuangan, Akuntansi, Utiliti, Saldo Awal, Help**. Ditambah beberapa modul **omnichannel
+> milik Leon Phone sendiri** (Marketplace, POS Kasir, Packing Station) yang TIDAK ada di
+> SISCOM tapi memang jadi kebutuhan operasional toko ini (lihat § "Tambahan Leon Phone" di
+> bagian bawah) — bukan pengurangan dari SISCOM, murni penambahan di luar cakupan yang
+> diaudit.
 
-## 1. Dashboard
-Ringkasan operasional harian, bukan tempat input data.
-- Omzet hari ini, order baru, order belum diproses
-- Barang hampir habis (low stock alert), barang paling laris
-- Grafik penjualan (harian/mingguan/bulanan)
-- Aktivitas karyawan (feed dari audit log)
-- Notifikasi marketplace (gagal sinkron, order baru masuk)
+## 0. Dashboard
+Kartu info perusahaan · Feed aktivitas/audit log · Chart best seller · Ringkasan
+Penjualan/Piutang/Pembelian/Hutang · Chart Pembayaran Hutang vs Piutang · Chart Laba/Rugi.
+(Referensi visual: `ref-gambar/WhatsApp Image 2026-08-07 at 16.43.08.jpeg`.)
 
-## 2. Master Data
-Data referensi yang dipakai modul lain. CRUD murni → kandidat kuat untuk Blade+Livewire
-table/form (DaisyUI `table` + `form` components) dengan pola standar.
-Brand · Kategori · Produk · Varian · **Cabang · Gudang** (hierarki PT → Cabang → Gudang,
-lihat `docs/08-tenancy.md`) · Supplier · Customer · Karyawan · Marketplace · Kurir ·
-Metode Pembayaran.
+## 1. Persediaan (Inventory)
 
-## 3. Inventory
-**Modul terpenting** — jantung akurasi stok.
+### Master Data
+- **Master Barang** — Kode, Group, Inisial, Nama, Barcode, Tipe, Satuan, harga
+  (Standar Jual/Min Jual), Min/Max Stok, **Jenis**, **Multi Satuan** (konversi unit, mis. 1
+  box = 12 pcs — barang bisa punya >1 satuan dgn rasio konversi), **Tracking** (flag
+  unit-level: barang ini dilacak per-unit via S/N/IMEI atau cuma agregat qty — SISCOM TIDAK
+  membedakan IMEI vs Serial Number sbg 2 tipe berbeda, cuma 1 flag "tracked" vs tidak, lihat
+  `docs/siscom-reference/01-field-inventory.md`), flag **POS** (boleh dijual di kasir),
+  **Fast/Slow/Dead Moving** threshold per-item, flag **Perolehan Poin** (CRM loyalty
+  per-item), scan barcode langsung di form.
+- **Kelompok Barang** — hierarkis (**Detail Header** = flag header/parent kategori), py
+  **Kode Pajak sendiri** (pajak per-kategori), 2 kode inisial (utk konteks tampilan
+  berbeda: struk vs laporan).
+- **Merek/Brand**, **Satuan** (py Kode Pajak juga), **Ukuran/Size** — master sederhana.
+- **Kelompok Std Harga Jual** — multi-tier pricing, Customer/Kelompok Pelanggan bisa
+  ditempel ke tier tertentu.
+- **Master Gudang** — Kode, **Otorisasi** (wajib, akses per-gudang — access control
+  granular per gudang, bukan cuma per cabang), Lokasi, Lokasi 2, Group.
+- **Bahan Baku** & **Bahan Jadi** — master data pendukung modul Perakitan (Bahan Baku →
+  Barang Jadi, lihat §Perakitan di bawah).
 
-- **Barang Masuk**: Purchase Order → Receive Barang → Scan IMEI/Serial Number saat
-  terima → Cetak barcode.
-- **Stock**, dipecah per dimensi:
-  - Per Gudang, Per Rak, Per Marketplace
-  - Per status: Reserved · Available · Damaged · Lost
-  - Satu unit fisik (via IMEI/Serial Number) hanya boleh berada di satu kombinasi
-    gudang+rak+status pada satu waktu — ini invarian yang harus dijaga di level Service,
-    bukan cuma di UI.
-- **Mutasi**: perpindahan stok Gudang A → Gudang B, punya status pengiriman sendiri
-  (dikirim → diterima), bukan langsung pindah instan.
-- **Stock Opname**: Scan barcode → sistem hitung selisih vs data → Approval sebelum
-  selisih itu benar-benar mengubah stok tercatat.
+### Transaksi Stok
+- **Stok Opname** — per Kelompok Barang (bisa per-kategori, tidak harus semua barang
+  sekaligus), **Diopname oleh** (siapa yg hitung fisik) → sistem hitung selisih vs data
+  tercatat → approval sebelum selisih benar-benar mengubah stok.
+- **Transfer Gudang** — permanen, Gudang Dari/Ke eksplisit, **Pilih TS** (tipe transfer),
+  py kolom **Accounting** (dampak jurnal — mutasi fisik terhubung ke Akuntansi, bukan
+  murni fisik).
+- **Transfer Sementara** — **2 jenis transfer berbeda** dari Transfer Gudang biasa: bisa
+  DIBALIK (reversible), dipakai utk kasus barang dipinjam/dicoba dulu antar gudang.
+- **Penyesuaian Persediaan (Stock Adjustment)** — Nomor Faktur, **Penyesuaian** (jenis
+  penyesuaian), **listimei** (adjust per-unit S/N spesifik, bukan cuma per-qty), **Harga
+  Netto** (nilai uang, py dampak Accounting), rentang tanggal.
+- **Saldo Awal Persediaan Barang** — opening stock per SUPPLIER (bukan cuma per akun COA),
+  bagian dari § Saldo Awal (lihat §7).
 
-## 4. Serial Number Management
-> Awalnya bernama "IMEI Management" — digeneralisasi (`docs/00-status.md` #18) karena
-> toko ini tidak cuma jual HP (IMEI), tapi juga elektronik lain seperti TV/mesin cuci yang
-> pakai Serial Number biasa (lihat contoh produk di `ref-gambar/`). IMEI sekarang jadi
-> salah satu **tipe identifier**, bukan satu-satunya.
+### Perakitan (Assembly) — fitur niche, prioritas rendah
+Bahan Baku → Barang Jadi via formula/BOM (`editFormulaForm` terhubung ke Master Barang).
+Kandidat fitur masa depan, kemungkinan **tidak relevan untuk retail HP** (Leon Phone tidak
+merakit barang) — pertimbangkan skip di implementasi awal.
 
-Bukan kolom, tapi **entitas dengan histori penuh** — berlaku untuk setiap barang yang
-tiap unit fisiknya perlu dilacak individual (nilai tinggi dan/atau bergaransi per-unit):
+### Cetak Barcode
+Print label barcode/QR dgn **template custom** (ukuran kertas, posisi baris) — bukan cuma
+fitur "cetak", ada konfigurasi template.
+
+## 2. Pembelian (Purchasing)
+
+Alur formal lengkap (simetris dgn Penjualan §3), tiap tahap dokumen TERPISAH — SISCOM
+support **3-way matching** (Receive independen dari Invoice, bisa beda waktu):
 ```
-Unit (IMEI atau Serial Number) → Supplier → Tanggal Masuk → Gudang → Marketplace → Order
-  → Customer → Garansi → Retur
+Surat Permintaan Barang (PQ) → Purchase Order (PO) → Nota Penerimaan Barang/Receive (RO)
+  → Faktur Pembelian/Invoice (PI) → Pembayaran (AP Payment)
 ```
-Scan satu unit = seluruh riwayat langsung muncul (dipakai lintas modul: Inventory, POS,
-Warranty, Service, Return, CRM). Detail struktur data → `04-database.md`.
+- **PQ** (`addPq`) — No. Faktur, Cabang, **cekppn**, Pilih Barang.
+- **PO** — py aksi **"Tutup" eksplisit** (partial fulfillment — PO tidak harus selalu
+  diterima 100% sekaligus, bisa ditutup manual kalau sisa qty tidak akan dikirim lagi).
+- **RO/Receive** (`addRo`) — Supplier, **cekppn**, widget kalender bulan (jadwal
+  cicilan/termin), independen dari Invoice.
+- **PI/Faktur Pembelian** (`editPiForm`) — Nomor Faktur, Cabang, Referensi, Hari/Jatuh
+  Tempo, **Pilih Data**, Supplier, kalender bulan+tahun, **cekppn**, Pilih Barang.
+- **Retur Pembelian (PR)** — wajib **Berdasarkan** (retur SELALU merujuk transaksi asal
+  spesifik, bukan retur bebas).
+- Supplier py **NPWP, Limit Hutang, Uang Muka, Batas** (credit management), bisa berstatus
+  "CASH USER" / marketplace (Blibli) / fintech (Akulaku) sbg entitas — bukan selalu B2B
+  formal.
+- **Kelompok Supplier** — Kode, Status, Inisial, Tipe.
 
-Barang **tanpa** identifier individual (aksesoris, sparepart kecil) TIDAK masuk modul
-ini — tetap dilacak agregat by quantity lewat Inventory § Stock di atas.
+⚠️ **Temuan penting dari live audit**: tenant "leon" (data produksi asli) belum pernah
+pakai PQ/PO/RO/PR sama sekali — cuma langsung PI (lihat
+`docs/siscom-reference/04-edit-form-fields.md` § Terkonfirmasi Kosong). Tetap bangun alur
+lengkapnya (SISCOM py fitur ini, requirement "fitur sama dgn yang lama"), tapi jangan
+heran kalau di data riil nanti PQ/PO/RO jarang dipakai — PI-langsung sepertinya alur yang
+paling sering dipraktikkan.
 
-## 5. Marketplace
-Semua marketplace (Shopee, Tokopedia, TikTok, Lazada, Blibli, dst) masuk lewat satu
-**Marketplace Engine** sebelum jadi Order:
+## 3. Penjualan (Sales)
+
+Alur formal simetris Pembelian:
 ```
-Shopee / Tokopedia / TikTok / Lazada / Blibli → Marketplace Engine → Order
+Penawaran/Quote (SQ) → Order Penjualan (SO) → Delivery Order (DO) → Faktur Penjualan (SI)
 ```
-Konsekuensi: menambah marketplace baru = menambah satu adapter/integration baru di engine,
-**bukan** menambah jalur order baru. Struktur Order tetap satu untuk semua channel (termasuk
-offline dari POS Kasir).
+- **SQ** — dokumen penawaran awal.
+- **SO** (`addSo`) — **Pilih SQ** (link eksplisit ke Quote asal — SO diturunkan dari Quote
+  via referensi nyata, bukan cuma alur konseptual), Discount, **PPN (%)**, Ongkos, Netto —
+  breakdown pajak/ongkos/diskon lengkap saat create. Py aksi **"Tutup"** juga (partial
+  fulfillment, sama pola dgn PO).
+- **DO (Delivery Order)** — **field `listimei`/`tempflagimei`** — **KONFIRMASI PENTING**:
+  scan S/N/IMEI terjadi di tahap DO (packing/pengiriman), **BUKAN** di tahap Invoice. Ini
+  cocok dgn desain kita soal Packing Station scan-unit-saat-packing (lihat § Tambahan Leon
+  Phone).
+- **SI/Faktur Penjualan** (`editSiForm`) — Nomor Faktur, Cabang, Pelanggan, **Salesman**,
+  Referensi, Hari/Jatuh Tempo, `nopj` (no. PO customer referensi), `noseri`, **Pilih
+  Data**, widget kalender bulan+tahun (termin pembayaran).
+- **Retur Penjualan (SR)** — wajib **Berdasarkan** + **Pilih Faktur SI** (retur selalu
+  merujuk invoice asal spesifik), py field `listimei` (retur per-unit S/N juga), Salesman.
+- Customer py **Limit, Piutang, Uang Muka, Sisa Limit** (credit management, simetris
+  Supplier), **Kelompok Harga** (assign ke tier pricing), **Kelompok \*** + **Sales \***
+  wajib saat edit.
+- **Kelompok Pelanggan** — Kode, Status, Inisial, Tipe.
+- **Salesman** — master data terpisah, py flag **Non Sales** (bisa ditandai "bukan sales
+  aktif" tanpa dihapus), assign ke Cabang.
+- **Promo** — master data promosi (belum diaudit detail field-nya, prioritas rendah,
+  tenant "leon" belum pernah pakai).
+- Faktur Penjualan py dimensi **"Wilayah"** (bukan cuma Kelompok Pelanggan) utk laporan.
+- **E-Faktur (Faktur Pajak elektronik DJP)** — tombol langsung dari POS/SI. **Perlu
+  dikonfirmasi ke user**: apakah tenant Leon Phone PKP dan wajib e-Faktur? Kalau ya, ini
+  BUKAN opsional.
 
-## 6. Order Management
-Status order lengkap, linear dengan cabang:
-```
-Draft → Pending Payment → Paid → Picking → Packing → Packed → Waiting Pickup
-     → Shipped → Delivered → Completed
-```
-Status tambahan yang bisa terjadi di titik manapun: `Cancel · Return · Refund · Warranty`.
+⚠️ Sama seperti Pembelian: tenant "leon" belum pernah pakai SQ/SO/DO — cuma langsung SI.
+Bangun alur lengkapnya tetap, tapi ekspektasikan pemakaian nyata condong ke SI-langsung.
 
-## 7. POS Kasir
-Layar transaksi offline. **Custom Livewire**, bukan CRUD table biasa (butuh kecepatan input
-scan berturut-turut). Scan barcode/IMEI/Serial Number · Diskon · Voucher · Member ·
-QRIS/Cash/Transfer · Split Payment · Print Thermal · Invoice PDF.
+## 4. Keuangan (Finance)
 
-## 8. Packing Station
-Halaman khusus admin gudang, **custom Livewire**, alur linear dan ketat:
-```
-Scan Invoice → Scan Unit (IMEI/Serial Number) → Validasi → Print Resi → Packing → Done
-```
-Kalau unit yang di-scan tidak cocok dengan yang seharusnya ada di order tersebut → **tidak
-bisa lanjut**. Ini validasi keras di level Service, bukan sekadar warning UI.
+- **Uang Muka Pembelian (AP Down Payment)** / **Uang Muka Penjualan (AR Down Payment)** —
+  dokumen terpisah dari Payment/Receipt biasa.
+- **Pembayaran Hutang (AP Payment)** — Voucher, Cabang, Supplier, No. Faktur (pilih faktur
+  yg dibayar), **integrasi Giro langsung di form ini** (`gironormalTemp`/`tglgiroTemp`/
+  `nominalgiroTemp`) — bukan modul terpisah yg harus dibuka manual.
+- **Penerimaan Piutang (AR Receipt)** — sama pola dgn AP Payment, plus `ketgiro1Temp`.
+- **Faktur Piutang (AR Invoice)** — link eksplisit ke Faktur Penjualan asal.
+- Alur Hutang/Piutang **3-tahap**: Tanda Terima/Nota Tagihan → Uang Muka → Pembayaran/
+  Penerimaan — bukan 1 tahap generik "bayar hutang".
+- **Penerimaan Kas/Bank** / **Pengeluaran Kas/Bank** — Voucher, **Kode Akun**, Detail
+  MULTI-BARIS (bisa split 1 voucher ke beberapa akun COA sekaligus).
+- **Tipe Bayar** — py **5 mapping akun COA berbeda per tipe bayar** (Acno/Achtg/Acptg/
+  Aclsk/Acrsk), flag **POS** (boleh dipakai di kasir), flag **Kartu** (kredit/debit),
+  flag **Uang Muka**.
+- **Bank** — py mapping akun sendiri (Acno/Acdb/Ackr/Accr/Acbatal).
+- **Transaksi Bank** — terhubung langsung ke modul Cheque/Giro (**Pilih Giro** wajib).
+- **Cheque/Giro** — **lifecycle module sendiri** (Tolak, Batal, jatuh tempo) — kalau
+  tenant Leon Phone transaksi giro, ini bukan fitur niche yg bisa diskip. **Perlu
+  dikonfirmasi ke user**: apakah Leon Phone pakai giro dalam operasional?
+- **Laporan Umur Hutang/Piutang (Aging)** built-in.
 
-## 9. Return
-Return Marketplace · Return Offline · Garansi · DOA (Dead on Arrival) — semuanya
-ditelusuri lewat unit (IMEI/Serial Number), bukan lewat nomor order saja.
+⚠️ Tenant "leon" belum pernah pakai modul ini sama sekali (AP/AR Down Payment, Cash/Bank,
+Cheque/Giro semua 0 data) — bangun tetap sesuai spec SISCOM, tapi ini kemungkinan modul yg
+paling belakangan dipakai serius di operasional nyata.
 
-## 10. Garansi (Warranty)
-```
-Waiting → Checking → Claim Vendor → Repair → Done
-```
+## 5. Akuntansi
 
-## 11. Service
-Servis HP (bukan garansi produk yang dijual toko sendiri, tapi jasa servis umum):
-Keluhan · Sparepart · Teknisi · Estimasi biaya · Foto sebelum · Foto sesudah.
+- **Chart of Accounts (COA)** — **HIERARKIS 6-SEGMEN** (Level 1-6, kolom `as1`-`as6`,
+  "Pilih Akun" per level) — **bukan flat code+parent_id**. Py **Cost Centre wajib** per
+  akun, **Anggaran/Thn** (budget tahunan terintegrasi langsung ke COA, bukan modul
+  terpisah).
+- **Cost Centre** — dimensi tambahan, dipakai di COA & transaksi.
+- **Jurnal Manual** — Voucher, grid multi-baris debit/kredit, **validasi real-time
+  `selisih`** (debit-kredit harus 0 sebelum submit).
+- **Jurnal otomatis** dari transaksi modul lain (penjualan → jurnal penjualan, dst,
+  event-driven).
+- **General Ledger (Buku Besar)** — **murni view/report otomatis** dari posting jurnal,
+  **TIDAK ADA create manual** (dikonfirmasi: `addGl` 404, tidak ada endpoint-nya).
+- **Aktiva Tetap (Fixed Assets)** — modul lengkap: **Periode Susut**, **Penyusutan
+  (Berapa Bulan)**, **Nilai Buku**, **Posting [DR]/[CR]** — **depresiasi OTOMATIS
+  terjadwal**, bukan jurnal manual tiap bulan.
+- **Recurring** (`addRe`) — field-nya HAMPIR IDENTIK dgn Fixed Assets (Periode Susut,
+  Penyusutan, Nilai Buku, Posting DR/CR) — kemungkinan Recurring Journal
+  diimplementasikan sbg varian mesin depresiasi/posting terjadwal yg sama, bukan modul
+  jurnal berulang generik terpisah.
+- **Tutup Buku (year-end)** — **TERPISAH** dari **Tutup Periode (month-end)**, 2-level
+  closing.
+- Laporan formal: Neraca, Laba/Rugi, Arus Kas, **Perubahan Modal** (4 laporan, bukan 3).
 
-## 12. CRM
-Customer · Histori pembelian · Histori garansi · Point loyalty · Voucher · Broadcast WA.
+⚠️ Modul Akunting terkonfirmasi **KOSONG total** di tenant "leon" (COA/Journal/Fixed
+Assets punya STRUKTUR yg terbukti dari form, tapi 0 record riil kecuali Fixed Assets yg
+py 1 entri) — kemungkinan besar tenant ini belum resmi mulai pembukuan double-entry lewat
+sistem ini. Bangun modul lengkap sesuai spec, siapkan untuk saat tenant mulai pakai.
 
-## 13. Purchasing
-```
-Purchase Request → Purchase Order → Receive → Invoice Supplier → Payment
-```
-(Receive di sini terhubung ke Inventory § Barang Masuk — satu event, dua sisi.)
+## 6. Utiliti
 
-## 14. Finance
-Kas · Bank · Pengeluaran · Pemasukan · Hutang Supplier · Piutang Customer · Cash Flow.
+- **Setting Cabang** — Kode, Alamat, Telp, FAX, **NPWP di level Cabang** (bukan cuma
+  Tenant/PT).
+- **Setting Default**, **Setting Password (User Management)** — user py assignment
+  eksplisit ke Cabang+Gudang tertentu, **Default Printer Struk**.
+- **Setting Menu User** — akses granular PER-MENU individual (bukan cuma role generik).
+- **Maintenance Data**, **Ganti Periode**, **Tutup Periode**, **Buka Kunci Data** (butuh
+  approval workflow — kesalahan di sini bisa merusak laporan keuangan terlaporkan),
+  **Validasi Data** (cek konsistensi saldo sebelum tutup periode).
+- **"GROUP CABANG"** — level hierarki DI ATAS Cabang (grouping cabang, mis. utk laporan
+  konsolidasi regional) — konsep yg tidak ada di hierarki PT→Cabang→Gudang kita saat ini.
+- Log py **Log IP** (alamat IP tercatat di audit log).
 
-## 15. HR
-User · Role · Shift · Absensi (opsional) · Log aktivitas.
+## 7. Saldo Awal
 
-## 16. Report
-Penjualan · Profit · HPP · Produk Terlaris · Brand Terlaris · Marketplace Terlaris ·
-Customer Terbaik · Margin · Cashflow · Stok · Barang Mati · Umur Stok (aging).
+**4 kategori terpisah** (bukan cuma "saldo akun"): Persediaan Barang (per Supplier),
+Hutang, Piutang, Neraca (akun COA) — setup sekali per tenant per periode awal.
 
-## 17. Setting / User
-Konfigurasi aplikasi, role & permission per-tenant (dipakai HR juga, lihat
-`docs/08-tenancy.md` § Role & permission), preferensi sistem, setting menu per user
-(kontrol menu mana yang muncul untuk role tertentu — terlihat di referensi sebagai
-"Setting Menu User").
+## 8. Help / Tools
 
-## 18. Akuntansi
-**Ditambahkan dari referensi SISCOM ERP** (`docs/00-status.md` #5) — terpisah dari Finance/
-Keuangan (§14). Kalau Finance itu operasional kas harian, Akuntansi adalah pembukuan formal:
-
-- **Chart of Accounts (COA)** — daftar akun (aset, kewajiban, modal, pendapatan, beban).
-- **Jurnal** — entri jurnal, bisa manual atau otomatis diturunkan dari transaksi modul lain
-  (penjualan → jurnal penjualan, pembelian → jurnal pembelian, dst — event-driven, bukan
-  input dobel manual).
-- **General Ledger (Buku Besar)** — rekap per akun dari seluruh jurnal.
-- **Saldo Awal** — saldo pembuka tiap akun saat pertama kali mulai pakai sistem (setup
-  sekali, per tenant, per periode awal).
-- **Manajemen Periode**: Ganti Periode (pindah periode akuntansi aktif) · Tutup Periode
-  (kunci periode yang sudah selesai, tidak bisa diubah lagi tanpa buka kunci) · Buka Kunci
-  Data (butuh **Approval Workflow**, lihat fitur lintas-modul di bawah — ini bukan tombol
-  bebas, kesalahan di sini bisa merusak laporan keuangan yang sudah dilaporkan) · Validasi
-  Data (cek konsistensi saldo sebelum tutup periode).
-- Laporan yang dihasilkan modul ini beririsan dengan Report (§16): Neraca, Laba/Rugi
-  (sudah disebut spec awal), Arus Kas — bedanya Report menampilkan, Akuntansi yang
-  menghasilkan angkanya dari jurnal berbasis double-entry.
+Kroscek IMEI (tool validasi terpisah, prioritas rendah), Min Stock Form, Journal Check,
+HPP Stock, Error Cross Check, Update Stock Formula, AC Setting/Analysis Setting, S/N
+Status Report — kumpulan utility/diagnostic tool, bukan modul bisnis utama.
 
 ---
 
-## Fitur lintas-modul (bukan modul sendiri, tapi wajib ada di semua modul relevan)
+## Tambahan Leon Phone (di luar cakupan SISCOM yang diaudit)
 
-- **Audit Log** — setiap perubahan stok/harga/order/user tercatat: siapa, kapan, apa yang
-  berubah (before/after).
-- **Approval Workflow** — perubahan harga, pembatalan transaksi, retur, stock adjustment
-  butuh persetujuan sesuai role.
+Modul berikut **TIDAK ada** di SISCOM (tenant "leon" yang diaudit tidak menunjukkan
+menu ini), tapi tetap dibangun karena kebutuhan operasional nyata Leon Phone sbg retailer
+omnichannel (lihat `CLAUDE.md`):
+
+- **Marketplace Engine** — Shopee/Tokopedia/TikTok/Lazada/Blibli masuk lewat satu engine
+  dgn adapter per-marketplace sebelum jadi Order (lihat `03-architecture.md` §
+  Marketplace Engine).
+- **POS Kasir** — layar transaksi offline custom Livewire (SISCOM py flag "POS" di Tipe
+  Bayar/Master Barang yg mengindikasikan ada konsep kasir, tapi halaman transaksi POS
+  itu sendiri tidak masuk cakupan audit — kemungkinan modul terpisah yg tidak dibuka).
+- **Packing Station** — scan unit S/N/IMEI saat packing (selaras dgn temuan `listimei` di
+  DO SISCOM — validasi ini KONSISTEN dgn pola SISCOM sendiri, cuma kita buat jadi layar
+  dedicated).
+- **Return/Warranty/Service/CRM sbg modul customer-facing terpisah** — SISCOM py Retur
+  Pembelian/Penjualan sbg dokumen transaksi, tapi tidak py modul Garansi/Servis/CRM
+  loyalty terpisah yg teraudit — ini murni tambahan Leon Phone.
+
+## Serial Number / Unit Tracking (konsep lintas-modul)
+
+Bukan modul sendiri, tapi **entitas dengan histori penuh** yg dipakai lintas Persediaan,
+Penjualan (DO, SR), Purnajual (Return/Warranty/Service):
+```
+Unit (S/N atau IMEI) → Supplier → Tanggal Masuk → Gudang → [Marketplace] → Order/DO
+  → Customer → Garansi → Retur
+```
+Detail struktur data → `04-database.md`. Barang **tanpa** identifier individual
+(aksesoris) tetap dilacak agregat via `stock_items`.
+
+---
+
+## Fitur lintas-modul (wajib ada di semua modul relevan)
+
+- **Audit Log** — siapa, kapan, apa yang berubah (before/after), **py Log IP**.
+- **Approval Workflow** — perubahan harga, pembatalan transaksi, retur, stock adjustment,
+  buka kunci periode.
 - **Riwayat Harga** — histori harga beli & harga jual per produk/varian.
-- **Label Barcode & QR Code** — cetak label produk dan unit (IMEI/Serial Number).
+- **Label Barcode & QR Code** — cetak label dgn template custom (ukuran kertas, posisi).
 - **Import/Export Excel** — master data, stok, transaksi.
 - **Attachment** — faktur supplier, foto retur, bukti transfer.
 - **Notification Center** — stok minimum, order baru, gagal sinkronisasi marketplace.
