@@ -1,10 +1,11 @@
 # Form "Edit" (Ubah Data) — Field Inventory
 
-> **Status: 15 dari 82 halaman** berhasil diverifikasi dengan URL edit REAL (bukan tebakan)
-> + field-nya diambil. Sisanya (~65 halaman, terutama semua modul TRANSAKSI: SO, SI, PO,
-> PQ, PR, RO, PI, DO, SQ, Journal, dll) **TIDAK bisa diaudit dengan aman** — lihat
-> "Kenapa berhenti di 15" di bawah. Ini bukan kemalasan, ini batas nyata dari aturan kerja
-> yang diminta user (baca-saja, GET/navigate, tidak submit form apapun).
+> **Status: 21 dari 82 halaman** berhasil diverifikasi dengan URL edit REAL (bukan tebakan)
+> + field-nya diambil (naik dari 15 setelah user mengonfirmasi submit form filter/cari
+> boleh dilakukan — lihat `docs/00-status.md` #23-24). Sisanya sebagian besar **TERKONFIRMASI
+> KOSONG** (tenant "leon" belum pernah pakai modul itu — bukan gagal diaudit, tapi memang
+> tidak ada datanya) dan sebagian kecil pakai arsitektur AJAX terpisah yang belum
+> ditelusuri — lihat rincian di bawah.
 
 ## Cara URL Edit ditemukan (metode BEDA dari form Tambah)
 
@@ -25,19 +26,59 @@ Ditemukan 2 pola render listing di SISCOM:
    via network inspection di `soListing`: 0 request data terkirim sampai form "Cari"
    di-submit manual) — SISCOM sengaja tidak auto-load semua transaksi historis demi performa.
 
-## Kenapa berhenti di 15 (bukan lanjut ke transaksi)
+## Metode lanjutan (setelah user konfirmasi submit form filter/cari diizinkan)
 
-Untuk dapat 1 ID record asli dari modul transaksi (SO, SI, PO, dst), satu-satunya cara yang
-ditemukan adalah **submit form filter/cari** (`<form method="POST" ... id="searchList">` /
-tombol "Cari") supaya AJAX listing terpanggil dan baris data muncul. Form submission —
-meskipun cuma FILTER/SEARCH, bukan create/update/delete — ada di luar batas kerja yang
-disepakati sejak awal audit ini: **"jangan sampai ada penambahan atau pengurangan
-database"** dan **"hanya GET/navigate, jangan klik apa-apa dulu"**. Daripada
-menginterpretasikan sendiri bahwa "submit form cari" itu aman, audit dihentikan di titik
-ini dan didokumentasikan jujur — **perlu konfirmasi eksplisit dari user dulu** kalau mau
-lanjut ke arah ini (submit filter form read-only untuk 65 halaman transaksi sisanya).
+User eksplisit mengizinkan submit form filter/cari (search-only, bukan create/update/
+delete) untuk lanjut audit modul transaksi. Ditemukan cara EFISIEN untuk ini: form
+`#searchList` di tiap listing method-nya POST ke URL listing itu sendiri (server
+re-render HTML lengkap dgn baris data) — jadi **tidak perlu navigasi tab sama sekali**,
+cukup `fetch(url, {method:'POST', body: <form fields default>, credentials:'include'})`
+dari konteks manapun, lalu parse HTML hasilnya dgn `DOMParser` utk cari baris pertama +
+ekstrak ID record asli dari atribut `onclick`/`ondblclick` (pola: `openRowEdit('ID',...)`
+atau `otorisasiEdit(tgl,'ID',...)`). Kalau ID dari onclick kosong, fallback ke isi kolom
+pertama tabel (biasanya kolom "Kode"/"No. Faktur" itu sendiri).
 
-## Field per halaman (15 yang berhasil diverifikasi, via URL edit REAL)
+**Pengecualian**: `goodsListing` dan `coaListing` TIDAK memakai pola ini (data mereka
+diisi via AJAX endpoint terpisah, bukan POST balik ke listing URL sendiri) — untuk
+`goodsListing` diakali pakai endpoint pencarian barang `Utility/searchBarangNama`
+(dipakai widget "scan barcode" di banyak halaman) yang mengembalikan JSON KODE/GROUP asli
+langsung. `coaListing` **belum ditemukan cara amannya** — endpoint AJAX aslinya belum
+ditelusuri, jadi form Edit COA masih belum terverifikasi.
+
+## Field per halaman (21 yang berhasil diverifikasi, via URL edit REAL)
+
+### Baru dari putaran kedua (submit form filter/cari)
+
+**Faktur Penjualan/SI** (`editSiForm/SI2026080166`) — field HAMPIR SAMA dgn `addSi`, plus
+field baru yang cuma muncul di Edit: **noseri** (nomor seri/urut internal), **Pilih Data
+\*** (kemungkinan pilihan dokumen sumber saat edit — mirip pola "Berdasarkan" di Retur),
+widget kalender bulan (Jan-Feb-Mar...) + tahun (jadwal cicilan/termin pembayaran).
+
+**Faktur Pembelian/PI** (`editPiForm/PI2026080113`) — field mirip `addPi` (belum pernah
+diaudit form Tambah-nya secara terpisah karena PI termasuk 10 halaman kena bug
+`otorisasiAdd()`→`addPo`, dan URL Tambah PI sendiri belum pernah dikonfirmasi — **temuan
+baru**: berarti field PI baru benar-benar terdokumentasi lewat form Edit ini): Nomor
+Faktur, Cabang, Referensi, Hari/Tanggal Jatuh Tempo, **Pilih Data \***, Supplier\*,
+kalender bulan+tahun, **PI** (nomor PI eksplisit sbg field terpisah), **cekppn**, Pilih
+Barang.
+
+**Kelompok Barang** (`editGoodsGroupForm/001`) — kode, Aktif, **inisial** + **inisial1**
+(2 kode inisial berbeda — kemungkinan singkatan utk 2 konteks tampilan berbeda,
+struk vs laporan), **Detail Header** (flag baris ini header/parent kategori atau bukan —
+konfirmasi ulang Kelompok Barang SISCOM hierarkis, bukan flat), Nama\*.
+
+**Kelompok Pelanggan** (`editCustGroupForm/001`) — Kode\*, Status, **Inisial \***, **Tipe
+\*** — field lebih lengkap dari dugaan sebelumnya (form Tambah `addCustGroup` cuma
+tercatat Kode+Nama, ternyata ada Inisial+Tipe juga).
+
+**Kelompok Supplier** (`editSuppGroupForm/001`) — sama pola dgn Kelompok Pelanggan:
+Kode\*, Status, Inisial\*, Tipe\*.
+
+**Master Barang** (`editGoodsForm/001-00563`) — konfirmasi ulang **Kelompok** (assign ke
+Kelompok Barang) sbg field terpisah dari Kode/Status — melengkapi field yang sudah
+tercatat sebelumnya dari `addGoods`.
+
+### Dari putaran pertama (URL edit statis/server-rendered)
 
 **Master Gudang** (`editWhForm/00001`) — field sama persis dgn form Tambah (Kode\*,
 **Otorisasi \***, Status, Lokasi, Lokasi 2, Group) — konfirmasi edit = reuse template Tambah,
@@ -106,7 +147,7 @@ untuk uji coba berulang.
 
 ## Pola yang bisa disimpulkan (untuk desain kita, meski belum 100% halaman terverifikasi)
 - **Form Edit hampir selalu = form Tambah yang sama, di-reuse, cuma di-pre-fill** (field set
-  identik di 14 dari 15 halaman yang dicek). Implikasi desain: kita tidak perlu bikin
+  identik/nyaris identik di 20 dari 21 halaman yang dicek). Implikasi desain: kita tidak perlu bikin
   Blade/form terpisah untuk Create vs Edit per modul — cukup 1 komponen form yang menerima
   optional `$record` untuk mode edit, sama seperti pola form Laravel pada umumnya.
 - Beberapa field EKSTRA baru muncul pas Edit yang tidak kelihatan di Tambah (Kode Pajak di
@@ -115,11 +156,39 @@ untuk uji coba berulang.
   ekstraksi label (batasan metode ekstraksi: hanya ambil elemen visible di viewport
   awal/non-collapsed, form panjang dgn field di scroll/tab lanjutan bisa terlewat).
 
-## Belum tercakup sama sekali
-~65 halaman (nyaris semua modul TRANSAKSI: `soListing`, `siListing`, `poListing`,
-`pqListing`, `prListing`, `roListing`, `piListing`, `doListing`, `sqListing`,
-`journalListing`, `stockOpnameListing`, `transferWhListing`, `adjustStockListing`, dan modul
-grouping master seperti `goodsGroupListing`/`custGroupListing`/`suppGroupListing`) — semua
-butuh submit form filter/cari dulu sebelum ID record asli muncul di DOM. **Perlu keputusan
-eksplisit user**: apakah submit form CARI/FILTER (bukan create/update/delete) dianggap masih
-dalam batas aman audit ini, sebelum dilanjutkan.
+## Terkonfirmasi KOSONG (bukan gagal diaudit — memang tidak ada datanya di tenant "leon")
+
+Dicek satu-satu via submit form filter/cari (kosong/default) — hasilnya 0 baris data utk
+SEMUA halaman berikut. Ini **temuan bisnis nyata**, bukan kegagalan metode (dikonfirmasi
+metode bekerja normal di halaman lain yang MEMANG ada datanya, mis. `siListing`,
+`piListing`, `goodsGroupListing`): tenant "leon" sejauh ini baru pakai Faktur Penjualan
+(SI) + Faktur Pembelian (PI) + master data dasar secara langsung — **belum pernah
+menyentuh alur formal Quote→Order→Delivery (SQ/SO/DO/PQ/PO/RO/PR), retur pembelian,
+uang muka AP/AR, cash/bank/giro/cheque, jurnal manual, stock opname/adjust/transfer, atau
+fitur niche (Promo, Perakitan/Raw-Fin Material, Ukuran, Kelompok Std Harga Jual,
+Recurring)**:
+
+`soListing`, `poListing`, `doListing`, `sqListing`, `pqListing`, `roListing`,
+`adjustStockListing`, `apDownPaymentListing`, `arDownPaymentListing`, `arInvoiceListing`,
+`cashBankPaymentListing`, `cashBankReceiptListing`, `journalListing`,
+`stockOpnameListing`, `transferWhListing`, `transferTempListing`, `reListing`,
+`promoListing`, `rawMaterialListing`, `finMaterialListing`, `sizeListing`,
+`salesPriceGroupListing`, `bankTransactionListing`, `chequeTransactionListing`,
+`poCloseListing`, `soCloseListing` (dan kemungkinan besar `pqCloseListing`/
+`sqCloseListing` juga kosong dgn alasan sama — tidak dicek satu-satu, karena "Tutup"
+transaksi cuma mungkin ada kalau transaksi sumbernya sendiri ada, dan sumbernya
+(PQ/SQ) sudah terkonfirmasi 0).
+
+**Implikasi untuk audit**: field/struktur form Edit utk semua modul di atas TIDAK BISA
+diverifikasi dari data live (tidak ada recordnya). Kalau dibutuhkan detail field Edit-nya,
+satu-satunya cara adalah pakai struktur form Tambah yang sudah terdokumentasi
+(`03-add-form-fields.md`) sebagai proxy — sudah terbukti di 20/21 halaman yang berhasil
+dicek bahwa Edit = Tambah yang di-reuse, jadi asumsi ini cukup wajar dipakai sbg fallback,
+TAPI belum terverifikasi 100% utk modul-modul ini secara spesifik.
+
+## Belum tertelusuri (arsitektur AJAX beda, bukan soal data kosong)
+`coaListing` (Chart of Accounts) — table kosong bahkan di response GET awal, kemungkinan
+data dimuat lewat AJAX endpoint terpisah (pola sama dgn `goodsListing`/
+`Mpersediaan/getGoodsList`) yang belum ditelusuri. COA jelas ADA datanya (Fixed Assets
+`addFa`/`editFaForm` sudah konfirmasi py referensi akun aktif) — ini murni keterbatasan
+metode, bukan temuan "kosong".

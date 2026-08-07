@@ -484,6 +484,39 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       dianggap TIDAK BISA diaudit lewat live app tanpa risiko melanggar batas kerja
       yang diminta user — perlu cara lain (mis. user sendiri yang screenshot/export).
 
+24. **Lanjut audit form Edit setelah user konfirmasi submit form filter/cari diizinkan**
+    (jawaban eksplisit user atas pertanyaan terbuka di #23: "Ya, boleh"). Ditemukan
+    metode efisien: form `#searchList` tiap listing POST balik ke URL listing itu
+    sendiri (server re-render HTML lengkap) — jadi cukup `fetch(url, {method:'POST',
+    body: <default form fields>, credentials:'include'})` tanpa perlu navigasi tab
+    sama sekali, lalu parse baris pertama utk ambil ID record asli dari atribut
+    `onclick`/`ondblclick` (pola `openRowEdit('ID',...)` / `otorisasiEdit(tgl,'ID',...)`).
+    - **6 halaman baru berhasil** (naik dari 15 → **21/82**): `editSiForm`,
+      `editPiForm`, `editGoodsGroupForm`, `editCustGroupForm`, `editSuppGroupForm`,
+      `editGoodsForm` (yang terakhir via cara lain — endpoint pencarian barang
+      `Utility/searchBarangNama` — karena `goodsListing` ternyata pakai AJAX endpoint
+      terpisah `Mpersediaan/getGoodsList`, bukan pola POST-balik-ke-diri-sendiri).
+    - **Temuan bisnis penting, dicek satu-satu (bukan diasumsikan)**: 25 halaman
+      lain (SO, PO, DO, SQ, PQ, RO, PR-related, AdjustStock, Ap/ArDownPayment,
+      ArInvoice, CashBank Payment/Receipt, Journal, StockOpname, TransferWh/Temp,
+      Recurring, Promo, RawMaterial, FinMaterial, Size, SalesPriceGroup,
+      BankTransaction, ChequeTransaction, PoClose, SoClose) **dicek via submit form
+      filter kosong/default dan hasilnya 0 baris data** — dikonfirmasi BUKAN
+      kegagalan metode (metode terbukti jalan normal di halaman yang memang ada
+      datanya). Kesimpulan: tenant "leon" sejauh ini baru pakai Faktur Penjualan
+      (SI) + Faktur Pembelian (PI) + master data dasar secara langsung, **belum
+      pernah menyentuh alur formal Quote→Order→Delivery, AP/AR down payment,
+      cash/bank/giro, jurnal manual, atau stock opname/adjust/transfer**. Field
+      Edit modul-modul itu, kalau dibutuhkan, pakai struktur form Tambah yang
+      sudah terdokumentasi sbg fallback (sudah terbukti 20/21 halaman = Edit
+      reuse Tambah).
+    - `coaListing` masih belum tertelusuri (pakai AJAX endpoint terpisah seperti
+      goodsListing, belum ditemukan endpoint aslinya) — BUKAN kosong (COA pasti
+      ada datanya, terkonfirmasi tidak langsung lewat `editFaForm` yang referensi
+      akun aktif), cuma metodenya belum ketemu.
+    - Hasil lengkap → `docs/siscom-reference/04-edit-form-fields.md` (ditulis
+      ulang, bukan cuma ditambah). `html/` sekarang 143 file.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di

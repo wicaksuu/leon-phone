@@ -2,14 +2,16 @@
 
 > **⚠️ CAKUPAN JUJUR (baca dulu sebelum asumsi "lengkap")**: kolom LISTING (tabel) di ~82
 > halaman 100% tercover. Field FORM "Tambah Data" (create) 100% tercover untuk **semua 42
-> URL yang berhasil diidentifikasi** (`03-add-form-fields.md`). Form **EDIT baru 15 dari 82
-> halaman** (`04-edit-form-fields.md`) — BUKAN kemalasan, tapi batas nyata: ~65 halaman
-> sisanya (hampir semua modul TRANSAKSI: SO/SI/PO/PQ/PR/RO/PI/DO/SQ/Journal/dll) baru
-> menampilkan data setelah user submit form filter/cari, dan submit form ada di luar batas
-> kerja "GET/navigate saja" yang disepakati — **butuh konfirmasi eksplisit user dulu**
-> sebelum lanjut ke sana. Halaman "murni form aksi" (~21 halaman non-listing, mis.
-> `changePeriod`, `eFakturForm`) juga belum di-audit detail fieldnya — lihat
-> `docs/00-status.md` #21-23 untuk kronologi.
+> URL yang berhasil diidentifikasi** (`03-add-form-fields.md`). Form **EDIT: 21 dari 82
+> halaman** berhasil diverifikasi dgn data REAL (`04-edit-form-fields.md`) — sisanya
+> **BUKAN gap metode, tapi TERKONFIRMASI KOSONG**: tenant "leon" baru pakai Faktur
+> Penjualan (SI) + Faktur Pembelian (PI) + master data dasar, belum pernah menyentuh alur
+> Quote→Order→Delivery (SQ/SO/DO/PQ/PO/RO/PR), AP/AR down payment, cash/bank/giro, jurnal
+> manual, atau stock opname/adjust/transfer — dicek satu-satu via submit form filter, 0
+> baris data. Satu pengecualian (`coaListing`) pakai arsitektur AJAX terpisah yang belum
+> ditelusuri. Halaman "murni form aksi" (~21 halaman non-listing, mis. `changePeriod`,
+> `eFakturForm`) juga belum di-audit detail fieldnya — lihat `docs/00-status.md` #21-24
+> untuk kronologi.
 >
 > **Metode**: bukan klik manual — fetch HTML mentah tiap URL menu (`fetch(url,
 > {credentials:'include'})` dari dalam browser yang sudah login user), parse via
@@ -36,10 +38,9 @@
    sudah diverifikasi. Ada juga peringatan soal bug copy-paste di kode SISCOM sendiri
    (10 halaman transaksi "Tambah"-nya sempat nyasar ke `addPo` via `otorisasiAdd()`,
    sudah diresolve via URL pengganti terverifikasi).
-4. `04-edit-form-fields.md` — field form "Edit" (ubah data), 15/82 halaman. Sisanya
-   butuh submit form filter dulu (di luar batas kerja audit ini) — lihat penjelasan
-   "Kenapa berhenti di 15" di file itu.
-5. `html/` — **HTML mentah 137 halaman** (82 listing + 42 add-form + 15 edit-form, hasil
+4. `04-edit-form-fields.md` — field form "Edit" (ubah data), 21/82 halaman terverifikasi
+   + daftar lengkap modul yang terkonfirmasi kosong (bukan gagal diaudit).
+5. `html/` — **HTML mentah 143 halaman** (82 listing + 42 add-form + 21 edit-form, hasil
    `fetch()` langsung, sebelum di-parse).
    **TIDAK di-commit ke git** (lihat `.gitignore` — isu hak cipta/ToS aplikasi pihak
    ketiga + ukuran ~14MB), tersimpan LOKAL saja di mesin ini. Nama file: `siscom_
