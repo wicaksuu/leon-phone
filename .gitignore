@@ -1,0 +1,8 @@
+.DS_Store
+.env
+
+# Raw HTML scraped dari aplikasi SISCOM ERP pihak ketiga (docs/siscom-reference/html/) —
+# disimpan lokal untuk referensi audit, sengaja TIDAK di-commit (isu hak cipta/ToS +
+# ukurannya besar). Ringkasan hasil audit yang relevan untuk desain kita ada di
+# docs/siscom-reference/*.md (bukan folder html/ ini), itu yang di-commit.
+docs/siscom-reference/html/

@@ -308,6 +308,68 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
     - Entri #6, #12, #17 di atas **dibiarkan tercatat apa adanya** (bukan dihapus) supaya
       jejak perubahan arah tetap kelihatan.
 
+20. **Audit langsung ke aplikasi live SISCOM ERP dimulai** (`myapp.siscom.id`, database
+    `leon` = tenant asli Leon Sellular Indonesia). User login manual (password tidak
+    ditangani AI — sesuai kebijakan kredensial), AI cuma navigasi/baca setelah login,
+    **TIDAK klik tombol Save/Submit/Delete apapun** (instruksi eksplisit user, diulang
+    beberapa kali: "jangan sampai menambah atau mengurangi data ketika proses"). Batasan
+    teknis yang disepakati: AI cuma boleh fetch/klik **link navigasi menu sidebar**
+    (halaman `*Listing`/`*Form` yang sama dengan yang user sendiri bisa klik), **TIDAK
+    PERNAH** fetch/klik ikon Actions per-baris (edit/lock/hapus) — di app lama seperti
+    ini ikon-ikon itu berpotensi jadi GET yang destruktif, jadi sengaja dihindari total.
+
+    **~~Audit manual halaman-per-halaman (klik+screenshot), disimpan di
+    `docs/siscom-reference/`~~ → DIHAPUS, PREMATUR.** Percobaan pertama (manual click +
+    screenshot + tulis catatan satu-satu) dihentikan setelah baru ~9 halaman dari
+    ratusan — user nilai datanya jelas belum lengkap/representatif untuk jadi acuan,
+    semua file di `docs/siscom-reference/` **dihapus total**. Jangan diasumsikan folder
+    itu masih ada atau berisi apa-apa.
+
+    **Metode baru (belum dieksekusi ulang saat entri ini ditulis)**: fetch HTML mentah
+    tiap halaman langsung via `fetch(url, {credentials:'include'})` dari dalam konteks
+    browser yang sudah login (pakai `mcp__claude-in-chrome__javascript_tool`), parse
+    tabel/form-nya via `DOMParser`, ambil SEMUA kolom header (termasuk yang tersembunyi
+    dari tampilan default — contoh: `Order Penjualan` ternyata py 36 kolom di HTML,
+    bukan cuma ~11 yang kelihatan di UI). Ini jauh lebih cepat & lengkap daripada klik
+    manual. User eksplisit minta: **audit sampai ke level sub-submenu (mis. Perakitan →
+    Pemakaian Bahan Baku/Penyelesaian Barang Jadi), lalu dibandingkan apakah desain kita
+    sudah 100% cocok atau belum** — bukan cuma sampling beberapa halaman seperti
+    percobaan pertama.
+
+    **Temuan yang TETAP BERLAKU meski catatan detailnya dihapus** (sudah dikonfirmasi
+    user, sudah dieksekusi ke skema): dari audit singkat `Master Barang`, SISCOM
+    **tidak membedakan IMEI vs Serial Number sebagai dua tipe berbeda** — cuma satu flag
+    "Tracking: (1) Barang Dengan Serial Number/Imei" vs tanpa. **`SerialIdentifierType`
+    enum (Imei/SerialNumber) SUDAH DIHAPUS dari desain**, diganti kolom
+    `identifier_value` polos tanpa tipe di `serial_units` (`docs/04-database.md` sudah
+    diupdate, lihat § Serial unit lifecycle). Ini keputusan FINAL, bukan bagian dari
+    audit yang dihapus.
+
+    **Status: SELESAI (sweep pertama).** Audit ulang dengan metode fetch+DOMParser
+    berhasil cover **82 halaman unik** sampai level sub-submenu (Dashboard, Persediaan,
+    Pembelian, Penjualan, Keuangan, Akunting, Utiliti, Saldo Awal, Help/Tools — termasuk
+    sub-sub seperti Perakitan→Pemakaian Bahan Baku, Keuangan→Hutang Dagang→Pembayaran,
+    Help→Tools→Kroscek Imei). Hasil:
+    - `docs/siscom-reference/01-field-inventory.md` — field lengkap per halaman (raw
+      truth, kolom generik audit-trail Doe/Toe/Loe/Deo/Actions sengaja tidak dicatat
+      berulang).
+    - `docs/siscom-reference/02-gap-analysis.md` — **jawaban eksplisit "sudah 100% sama
+      atau belum": BELUM.** Struktur/alur besar kita sudah selaras, tapi jauh lebih
+      sederhana di level field. Gap terbesar: (1) status "Tutup" eksplisit untuk
+      PR/PO/SO — partial fulfillment tidak ada di desain kita, (2) **E-Faktur** (pajak
+      elektronik DJP) sama sekali tidak ada di blueprint, (3) **Aktiva Tetap/Fixed
+      Assets** modul penuh tidak ada, (4) Cost Centre sebagai dimensi COA tidak ada,
+      (5) credit limit management Supplier/Customer belum ada. Detail lengkap +
+      rekomendasi prioritas ada di file itu — **belum ada satu pun gap yang
+      ditindaklanjuti ke `docs/02-modules.md`/`docs/04-database.md`**, semua masih
+      perlu dikonfirmasi user satu-satu dulu.
+    - `docs/siscom-reference/html/` — HTML mentah 82 halaman (~14MB) tersimpan LOKAL
+      saja, **TIDAK di-commit** (`.gitignore`, isu hak cipta aplikasi pihak ketiga).
+      Kalau sesi berikutnya jalan di mesin lain, folder ini tidak akan ada.
+    - Halaman "Laporan *" (murni report) TIDAK di-audit detail satu-satu — kebanyakan
+      cuma form filter kosong sebelum submit, minim info baru. Kalau perlu detail
+      laporan spesifik nanti, audit ulang halaman itu saja saat itu.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di

@@ -31,7 +31,7 @@ Setiap modul (kecuali yang murni read-only seperti Report) punya sub-folder stan
 Modules/<Nama>/
 ├── Actions/        ← satu class = satu operasi bisnis atomik (mis. CreatePurchaseOrder)
 ├── DTOs/            ← data transfer object antar layer, hindari passing array mentah
-├── Enums/            ← status (OrderStatus, SerialIdentifierType, dll) — PHP native enum, bukan string magic
+├── Enums/            ← status (OrderStatus, SerialUnitStatus, dll) — PHP native enum, bukan string magic
 ├── Events/
 ├── Exceptions/       ← exception spesifik domain (lihat 05-coding-standards.md)
 ├── Jobs/             ← proses async (sinkronisasi marketplace, generate report berat)

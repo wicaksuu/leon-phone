@@ -92,7 +92,7 @@ opsional tambahan.
   Controller/Livewire.
 - **DTOs** untuk data yang lewat antar layer (bukan `array` mentah, bukan `Request` object
   yang dipassing ke Service — Service tidak boleh tahu soal HTTP).
-- **Enums** (PHP native `enum`) untuk semua status (`OrderStatus`, `SerialIdentifierType`,
+- **Enums** (PHP native `enum`) untuk semua status (`OrderStatus`, `SerialUnitStatus`,
   `ApprovalStatus`, dll) — tidak ada magic string status di kode manapun.
 - **Policy** untuk semua otorisasi, termasuk approval workflow (`can('approve', $request)`).
 - Nama class/method Inggris, pesan yang tampil ke user (exception message, notification)

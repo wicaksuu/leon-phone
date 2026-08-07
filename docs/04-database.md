@@ -46,20 +46,27 @@ Detail penuh model tenancy (kenapa shared-DB, resolusi tenant context, dst) → 
 ### Serial unit lifecycle
 > Digeneralisasi dari "IMEI lifecycle" (`docs/00-status.md` #18) — IMEI cuma satu **tipe**
 > identifier (khusus HP), barang elektronik lain (TV, mesin cuci, dst — lihat contoh
-> produk di `ref-gambar/`) pakai Serial Number biasa. Struktur tabel di bawah generik
-> untuk keduanya, dibedakan lewat kolom `identifier_type`.
+> produk di `ref-gambar/`) pakai Serial Number biasa.
+>
+> **Disederhanakan lagi** (`docs/00-status.md` #20, hasil audit langsung ke SISCOM ERP —
+> `docs/siscom-reference/03-master-barang.md` § Tracking): SISCOM sendiri **tidak
+> membedakan IMEI vs Serial Number sebagai dua tipe berbeda** di levelnya — cuma satu flag
+> "unit ber-identifier" vs "tidak". Kita ikuti pola itu: **tidak ada lagi kolom
+> `identifier_type`**, cukup `identifier_value` polos. IMEI dan Serial Number diperlakukan
+> 100% sama secara sistem (histori, validasi unique, scan flow) — bedanya cuma FORMAT
+> string, dan format tidak menentukan cabang logic apapun, jadi tidak perlu jadi kolom
+> enum. Kalau nanti butuh validasi format (mis. IMEI harus 15 digit Luhn-valid), itu
+> validasi opsional di level Request/Rule, bukan tipe data.
 
 Satu tabel `serial_units` (unit fisik) + satu tabel `serial_unit_histories` (log kejadian,
-append-only). `identifier_value` unique **per tenant per tipe**
-(`unique(tenant_id, identifier_type, identifier_value)`), bukan global — dua tenant
-berbeda secara teori bisa punya entri untuk identifier yang "sama" kalau datanya salah
-input, sistem tidak menganggap itu error lintas-tenant karena mereka memang tidak saling
-tahu.
+append-only). `identifier_value` unique **per tenant** (`unique(tenant_id, identifier_value)`),
+bukan global — dua tenant berbeda secara teori bisa punya entri untuk identifier yang
+"sama" kalau datanya salah input, sistem tidak menganggap itu error lintas-tenant karena
+mereka memang tidak saling tahu.
 
 ```
 serial_units
-  id, tenant_id, identifier_type (enum: imei/serial_number — lihat
-  Modules\SerialNumber\Enums\SerialIdentifierType), identifier_value, product_variant_id,
+  id, tenant_id, identifier_value, product_variant_id,
   current_status (enum: in_stock/reserved/sold/returned/service/lost/damaged),
   current_warehouse_id, current_rack_id, current_marketplace_id (nullable),
   created_at, updated_at
