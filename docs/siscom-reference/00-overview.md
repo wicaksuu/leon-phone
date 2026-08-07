@@ -1,11 +1,15 @@
 # SISCOM ERP — Audit Reference (untuk AI coding agent)
 
-> **⚠️ CAKUPAN JUJUR (baca dulu sebelum asumsi "lengkap")**: yang 100% tercover cuma
-> kolom LISTING (tabel) di ~82 halaman. Field FORM "Tambah Data" (create) baru tercover
-> untuk **13 dari 42 halaman yang teridentifikasi** (`03-add-form-fields.md`), dan form
-> EDIT cuma 1 dari 82 halaman yang pernah dibuka. **JANGAN anggap dokumen ini gambaran
-> lengkap 100%** — lihat `docs/00-status.md` #21 untuk kronologi kenapa (#20 sempat
-> mengklaim "SELESAI" secara prematur, dikoreksi setelah user tanya eksplisit).
+> **⚠️ CAKUPAN JUJUR (baca dulu sebelum asumsi "lengkap")**: kolom LISTING (tabel) di ~82
+> halaman 100% tercover. Field FORM "Tambah Data" (create) SEKARANG 100% tercover untuk
+> **semua 42 URL yang berhasil diidentifikasi** (`03-add-form-fields.md`) — termasuk 6
+> listing yang dikonfirmasi TIDAK punya tombol Tambah, dan 1 URL (`addGl`) yang dikonfirmasi
+> tidak ada (404). Form **EDIT masih cuma 1 dari 82 halaman** yang pernah dibuka — INI GAP
+> YANG MASIH TERSISA, jangan anggap form Edit sudah lengkap. Halaman "murni form aksi" (~21
+> halaman non-listing, mis. `changePeriod`, `eFakturForm`) juga belum di-audit detail
+> fieldnya — lihat `docs/00-status.md` #21-22 untuk kronologi (#20 sempat mengklaim
+> "SELESAI" secara prematur, dikoreksi setelah user tanya eksplisit; #22 menutup gap
+> form Tambah tapi form Edit masih terbuka).
 >
 > **Metode**: bukan klik manual — fetch HTML mentah tiap URL menu (`fetch(url,
 > {credentials:'include'})` dari dalam browser yang sudah login user), parse via

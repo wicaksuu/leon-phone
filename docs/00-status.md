@@ -404,6 +404,50 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       sekali" — lanjutkan dari situ, JANGAN klaim selesai lagi sebelum benar-benar
       dicek ulang menyeluruh (create form + edit form, bukan cuma listing).
 
+22. **Menutup gap form "Tambah" dari #21** — lanjutan langsung dari #21 ("lanjutkan
+    sisanya, pastikan download semua html nya"). Semua 42 URL "Tambah" yang
+    teridentifikasi sekarang **sudah di-fetch field-nya + HTML mentahnya disimpan**
+    (total `docs/siscom-reference/html/` sekarang 122 file: 82 listing + 40 form
+    tambah). Rincian:
+    - 29 URL yang sebelumnya "belum diverifikasi" + `addAdjustStock` (kelewat di #21)
+      → semua berhasil di-fetch.
+    - 5 URL pengganti untuk halaman kena bug `otorisasiAdd()`→`addPo` (dari #21)
+      berhasil ditebak & diverifikasi (HTTP 200 + judul halaman cocok): `addSi`,
+      `addApPayment`, `addArReceipt`, `addPr`, `addRo`.
+    - `addGl` dikonfirmasi **tidak ada** (404 → redirect ke `pageNotFound`) — General
+      Ledger murni view otomatis dari posting jurnal, tidak ada create manual.
+    - 6 listing (`userListing`, `branchListing`, `apBeginListing`, `arBeginListing`,
+      `userMenuListing`, `logListing`) dikonfirmasi **tidak punya tombol Tambah sama
+      sekali** — satu-satunya link `/add*` yang ada di halaman itu adalah
+      `addPosForm`, ternyata shortcut sidebar GLOBAL yang muncul di semua halaman,
+      bukan tombol spesifik (sempat jadi false-positive di analisis awal).
+    - Temuan baru yang cukup penting untuk desain: **DO (Delivery Order) py field
+      `listimei`/`tempflagimei`** — konfirmasi scan IMEI/Serial terjadi di tahap
+      packing/pengiriman (DO), BUKAN di Invoice — cocok dgn asumsi desain kita soal
+      Packing Station. **Retur Penjualan (`addSr`) wajib "Berdasarkan" + "Pilih
+      Faktur SI"** — retur selalu merujuk invoice asal spesifik, bukan retur bebas.
+      **Jurnal Manual (`addJournal`) py validasi real-time `selisih` (debit-kredit)**
+      harus 0 sebelum submit. **Cheque/Giro (`addChequeTransaction`) + Transaksi Bank
+      (`addBankTransaction`) saling terhubung** — payment via giro terintegrasi
+      langsung di `addApPayment`/`addArReceipt` juga (field `gironormalTemp` dst),
+      bukan modul terpisah yang harus dibuka manual.
+    - Hasil lengkap → `docs/siscom-reference/03-add-form-fields.md` (ditulis ulang
+      total, bukan cuma ditambah).
+    - **Yang MASIH belum tercakup (jangan klaim 100% lengkap)**: (a) form **EDIT**
+      masih 1/82 — gap besar yang belum disentuh sama sekali di putaran ini karena
+      user cuma minta lanjutkan "Tambah"; (b) ~21 halaman "murni form aksi" (mis.
+      `changePeriod`, `eFakturForm`, `dataMaintenanceForm`) belum diaudit field-nya
+      karena bukan pola listing+tambah — kalau dibutuhkan, perlu putaran terpisah;
+      (c) field yang dicatat di `03-add-form-fields.md` masih level LABEL ringkas
+      (bukan semua atribut HTML/opsi dropdown/JS validasi) — untuk detail penuh, buka
+      file HTML mentah terkait di `html/`.
+    - Semua file HTML baru dipindah dari `~/Downloads/` (metode Blob-download, sesuai
+      #20/#21 — `document.cookie` tetap diblokir extension jadi tidak bisa pakai
+      curl+cookie) ke `docs/siscom-reference/html/` via `mv`, termasuk membuang 3 file
+      duplikat hasil auto-rename Chrome (`(1).html`) dari percobaan fetch yang
+      sempat ke-truncate outputnya di sesi sebelumnya (isi filenya identik, bukan
+      hilang data — cuma nama file dobel).
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di
