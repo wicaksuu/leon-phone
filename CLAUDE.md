@@ -35,19 +35,14 @@ Gudang). Lihat `docs/04-database.md`.
 
 ## Tech stack (keputusan final, jangan diganti tanpa diskusi)
 
-> **Riwayat**: sempat ada rencana pecah jadi Filament (backend agent) + REST API/React
-> (frontend agent) supaya 2 AI agent kerja paralel. **Dibatalkan hari yang sama** — balik
-> ke full Filament. Detail pembalikannya → `docs/00-status.md` #12. Jangan usulkan split
-> React lagi tanpa user minta eksplisit.
-
 | Layer | Pilihan | Alasan |
 |---|---|---|
 | Backend | **Laravel versi terbaru** (bukan LTS lama — pakai rilis terbaru saat mulai coding) | Ekosistem modular matang, cocok untuk domain-driven structure |
 | Database | **MySQL 8.0** (bukan MariaDB — dibalik saat instalasi, lihat `docs/00-status.md` #14) | Sudah jalan lokal di mesin dev user, alasan praktis, driver Laravel sama (`mysql`) |
-| Multi-tenancy | **Shared DB + `tenant_id`**, via Filament native Tenancy | Filament punya built-in tenant switcher (persis kebutuhan "pilih PT" di referensi) + otomatis scope query resource by tenant — tidak perlu paket tenancy pihak ketiga |
-| Admin/CRUD panel | **Filament** | Modul CRUD-berat (Master Data, Purchasing, Finance, Akuntansi, HR, Report, Setting) dibangun di atas Filament — UI modern bawaan, cepat, konsisten |
-| Layar operasional custom | **Livewire + Tailwind**, DI LUAR/di dalam Filament panel (custom page) | POS Kasir, Packing Station, alur scan unit butuh UX real-time (scan barcode/IMEI/Serial Number berturut-turut, feedback instan) yang tidak pas dipaksakan ke Filament resource form biasa |
-| Frontend styling | Tailwind CSS, design token custom (lihat `docs/06-ui-ux-guidelines.md`) | Filament pakai Tailwind juga → satu bahasa desain di seluruh app, satu codebase |
+| Multi-tenancy | **Shared DB + `tenant_id`**, via custom session-based middleware | Menyimpan context tenant aktif di session (`session('tenant_id')`) dan di-resolve oleh middleware `ResolveTenantContext` menjadi singleton `TenantContext` |
+| Autentikasi | **Laravel Breeze** (Blade stack) | Starter kit resmi, ringan, sudah menyertakan Tailwind CSS, view/controller dapat dicustom penuh |
+| Layout Utama | **Drawer-based layout custom** (DaisyUI `drawer` + `navbar`) | Mengikuti referensi [DaisyUI Nexus Dashboard Growth](https://nexus.daisyui.com/dashboards/growth): drawer-based sidebar di kiri + sticky top header/navbar di kanan atas |
+| Frontend styling | **Tailwind CSS 4 + DaisyUI 5** | DaisyUI menyediakan class component siap pakai + semantic color tokens + theming built-in, terintegrasi penuh dalam satu pipeline aset Tailwind |
 
 Detail lengkap tiap keputusan → `docs/03-architecture.md`.
 
@@ -56,12 +51,12 @@ Detail lengkap tiap keputusan → `docs/03-architecture.md`.
 - `docs/00-status.md` — **baca ini duluan**: log keputusan + status terkini, resume point
 - `docs/01-vision.md` — kenapa RMS bukan POS, siapa pemakainya (§ single-tenant di dalamnya sudah usang, lihat catatan riwayat di atas)
 - `docs/02-modules.md` — daftar & detail 18 modul (Dashboard s/d Akuntansi)
-- `docs/03-architecture.md` — struktur folder `Modules/*`, konvensi Actions/DTOs/Services, kapan Filament vs kapan Livewire custom
+- `docs/03-architecture.md` — struktur folder `Modules/*`, konvensi Actions/DTOs/Services, pilihan teknis Blade vs Livewire
 - `docs/04-database.md` — konvensi MySQL 8.0, entitas kunci (tenant/PT/Cabang, serial unit lifecycle IMEI/SN, stock states, order status, akuntansi), naming convention
 - `docs/05-coding-standards.md` — **wajib dibaca sebelum nulis kode apapun**: error handling, DB transaction/rollback, testing
-- `docs/06-ui-ux-guidelines.md` — standar visual modern/premium/responsive, breakpoint, komponen, log referensi visual (`ref-gambar/`)
+- `docs/06-ui-ux-guidelines.md` — standar visual modern/premium/responsive, breakpoint, komponen DaisyUI, layout Nexus Dashboard, log referensi visual (`ref-gambar/`)
 - `docs/07-roadmap.md` — 5 fase implementasi, urutan build
-- `docs/08-tenancy.md` — **model multi-tenant SaaS**: struktur PT/tenant, isolasi data, flow login & pilih PT
+- `docs/08-tenancy.md` — **model multi-tenant SaaS**: struktur PT/tenant, isolasi data, flow login, pilih PT & custom session switcher
 
 ## Referensi visual
 
@@ -80,8 +75,8 @@ Yang sudah masuk sejauh ini:
    Default, Setting Password, Setting Menu User, Maintenance Data, Ganti Periode, Tutup
    Periode, Buka Kunci Data, Validasi Data), Saldo Awal, Help.
 2. `WhatsApp Image 2026-08-07 at 16.47.07.jpeg` — halaman pilih PT setelah login (di
-   referensi aslinya per-PT = database terpisah; **di project kita ini jadi tenant switcher
-   Filament**, bukan pilih database, karena kita pakai shared DB + `tenant_id`).
+   referensi aslinya per-PT = database terpisah; **di project kita ini jadi dropdown tenant switcher
+   custom (DaisyUI dropdown) berbasis session**, bukan pilih database, karena kita pakai shared DB + `tenant_id`).
 
 ## Aturan kerja untuk AI agent di project ini
 
@@ -93,8 +88,8 @@ Yang sudah masuk sejauh ini:
    dan punya rollback path yang jelas. Lihat `docs/05-coding-standards.md`.
 3. **Error handling konsisten**: exception khusus per domain (mis. `InsufficientStockException`,
    `DuplicateSerialUnitException`), bukan `throw new Exception('...')` generik. Semua exception
-   ditangani di satu tempat (`Handler`) dengan response format seragam (Filament notification
-   untuk admin, JSON terstruktur untuk API/marketplace webhook).
+   ditangani di satu tempat (`Handler`) dengan response format seragam (DaisyUI notification/toast
+   untuk web/livewire, JSON terstruktur untuk API/marketplace webhook).
 4. **Unit ber-identifier (IMEI untuk HP, Serial Number untuk elektronik lain) adalah
    entitas kelas satu**, bukan sekadar kolom — lihat `docs/00-status.md` #18 kenapa ini
    digeneralisasi dari "IMEI" murni. Setiap unit punya histori penuh (supplier → tanggal
@@ -103,14 +98,14 @@ Yang sudah masuk sejauh ini:
    Lihat `docs/04-database.md`.
 5. **UI/UX**: semua layar baru harus modern, premium, dan responsive di semua ukuran layar
    (mobile staf gudang, tablet kasir, desktop admin). Ikuti `docs/06-ui-ux-guidelines.md` —
-   jangan improvisasi palet/komponen baru di luar design token yang sudah ditentukan.
+   jangan improvisasi palet/komponen baru di luar design token yang sudah ditentukan (ikuti styling DaisyUI 5).
 6. **Jangan mulai fase berikutnya sebelum fase sebelumnya (lihat roadmap) selesai** —
    urutan ini sengaja dibuat supaya tidak ada perubahan arsitektur besar di tengah jalan.
 7. Bahasa komunikasi dengan user: **Bahasa Indonesia**. Nama variabel/class/kode: **Inggris**
    (standar Laravel).
 8. **Setiap model/tabel bisnis WAJIB scoped by `tenant_id`.** Tidak ada query yang boleh
    menembus lintas tenant. Lihat `docs/08-tenancy.md` untuk mekanisme wajib (trait +
-   global scope + Filament tenancy) — jangan implementasi scoping manual ad-hoc per modul.
+   global scope + custom session-based `ResolveTenantContext` middleware) — jangan implementasi scoping manual ad-hoc per modul.
 9. **Setiap fitur/endpoint baru WAJIB disertai 3 jenis test**: Unit test, Feature/
    Integration test, dan skrip k6 (untuk aksi yang dipanggil frekuensi tinggi seperti
    POS checkout, scan serial unit, sync marketplace). Lihat `docs/05-coding-standards.md` § Testing.

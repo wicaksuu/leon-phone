@@ -44,34 +44,30 @@ tabel turunan, lihat § Aturan wajib di bawah.
 Setiap tabel bisnis lain (products, orders, imeis, dst — lihat `docs/04-database.md`) juga
 punya kolom `tenant_id` langsung, bukan cuma diturunkan dari relasi.
 
-## Resolusi tenant context — satu mekanisme untuk Filament & API
+## Resolusi tenant context — satu mekanisme untuk Web UI & API
 
-Filament+Livewire (primary UI) dan REST API (sekunder — webhook marketplace, app mobile
+Web UI (Dashboard/Master Data/POS/Packing) dan REST API (sekunder — webhook marketplace, app mobile
 masa depan) adalah dua entry point berbeda ke Laravel yang sama. Supaya scoping tenant
 tidak diimplementasi dua kali secara berbeda (dan berisiko lupa di salah satu), keduanya
 **wajib lewat mekanisme yang sama**:
 
-1. Middleware `ResolveTenantContext` (dipasang di route group Filament panel DAN route
-   group `api.php`) menentukan tenant aktif dari user yang sedang login, lalu menyimpan
-   ke sebuah singleton `TenantContext` (`app()->instance(...)`) untuk request tersebut.
+1. Middleware `ResolveTenantContext` (dipasang di route group `web` untuk area terproteksi auth DAN route
+   group `api.php`) menentukan tenant aktif, lalu menyimpan ke sebuah singleton `TenantContext`
+   (`app()->instance(...)`) untuk request tersebut.
 2. Trait `BelongsToTenant` di-attach ke semua Model bisnis → daftarkan global scope yang
    otomatis `WHERE tenant_id = ?` dari `TenantContext`, dan otomatis isi `tenant_id` saat
    create.
-3. **`tenant_id` TIDAK PERNAH dipercaya dari input client** (form Filament, body request
+3. **`tenant_id` TIDAK PERNAH dipercaya dari input client** (form input, body request
    API, header custom dari frontend) — selalu diturunkan dari `TenantContext` sisi
    server. Kalau frontend kirim `tenant_id` yang beda dari context aktif, itu bug atau
    percobaan serangan, bukan hal yang di-follow.
 
-### Sisi Filament (primary — satu-satunya UI, lihat `docs/00-status.md` #12)
-Pakai fitur **native Tenancy** Filament (`Panel::tenant(Tenant::class)`): otomatis
-render tenant switcher di header (setara dropdown "PT. ENAM JALAN DEWA ELEKTRONIK (01)" di
-referensi, ini yang jadi pengganti langsung halaman "pilih PT" di referensi — bukan lewat
-API terpisah), otomatis scope query resource. Livewire custom page (POS Kasir, Packing
-Station) berjalan DI DALAM konteks Filament panel yang sama, jadi otomatis ikut tenant
-aktif tanpa mekanisme tambahan. `ResolveTenantContext` middleware sinkron dengan tenant
-yang dipilih Filament.
+### Sisi Web UI (Primary — Dashboard, Master Data, POS, Gudang)
+- **Login & Onboarding**: Setelah user login via Laravel Breeze, jika user terdaftar di lebih dari satu PT, sistem akan mengarahkan ke halaman pilihan PT (tenant selector). Pilihan PT tersebut disimpan di session (`session('tenant_id')`). Jika user hanya memiliki akses ke 1 PT, session otomatis diisi dengan tenant_id tersebut tanpa melewati halaman selector.
+- **Tenant Switcher**: Dropdown pilihan PT diletakkan di header/navbar custom (DaisyUI `dropdown` component). Memilih PT baru akan mengirim request post ke route switch tenant, mengupdate session `session('tenant_id')`, dan mengarahkan kembali user ke dashboard.
+- **Mekanisme Scoping**: Middleware `ResolveTenantContext` membaca `session('tenant_id')` untuk menginisialisasi singleton `TenantContext`. Semua query database dan view otomatis tersaring oleh scope tenant aktif tersebut.
 
-### Sisi API (sekunder — webhook marketplace, app mobile masa depan)
+### Sisi API (Sekunder — Webhook Marketplace, App Mobile)
 Bukan primary interface (lihat `docs/00-status.md` #12), tapi tetap butuh resolusi tenant
 yang benar untuk dua kasus: webhook marketplace (tenant ditentukan dari konfigurasi
 integrasi yang di-hit, bukan dari user login) dan app mobile staf gudang di masa depan
@@ -87,9 +83,10 @@ di-assign lewat `tenant_user.role_id`, bukan kolom role global di tabel `users`.
 
 Ada satu lapis akses lagi di luar semua PT: **platform admin** (staf pemilik sistem SaaS
 ini, bukan staf salah satu PT) — kelola daftar tenant, approve pendaftaran PT baru,
-suspend PT yang subscription-nya expired. Ini panel Filament TERPISAH (bukan bagian dari
-panel per-tenant), dengan model `User` yang sama tapi tanpa relasi ke `tenant_user` mana
-pun yang relevan untuk akses ini.
+suspend PT yang subscription-nya expired. Ini menggunakan route terproteksi khusus
+(misalnya `/platform-admin/*`) dengan middleware otorisasi `PlatformAdmin` (BUKAN panel
+Filament terpisah), menggunakan model `User` yang sama tetapi dibatasi aksesnya hanya
+untuk user dengan flag admin SaaS global.
 
 ## Testing wajib untuk tenancy
 

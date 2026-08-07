@@ -7,28 +7,30 @@
 
 ## Status saat ini
 
-**Fase: 1 (Fondasi) — SEDANG BERJALAN.** Blueprint (`CLAUDE.md` + `docs/*`) sudah matang,
-dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). Repo:
+**Fase: 1 (Fondasi) — SEDANG BERJALAN, PERUBAHAN ARAH TECH STACK.** Blueprint (`CLAUDE.md`
++ `docs/*`) sudah matang. Repo:
 [github.com/wicaksuu/leon-phone](https://github.com/wicaksuu/leon-phone) (branch `main`).
+**Perubahan besar**: Filament **di-drop sepenuhnya** (lihat #19 di log keputusan), diganti
+Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + layout custom ala Nexus Dashboard.
 
 **Yang sudah ada (jangan install/setup ulang, cek dulu sebelum asumsi belum ada)**:
 - Laravel 13.24 + PHP 8.4.1, di root project ini (bukan subfolder)
 - MySQL 8.0 lokal (database `leon_phone_rms`, lihat #14 di bawah — bukan MariaDB)
-- Filament 4 dengan native Tenancy aktif (`app/Providers/Filament/AdminPanelProvider.php`
-  → `->tenant(Tenant::class, slugAttribute: 'code')`)
+- ~~Filament 4 dengan native Tenancy aktif~~ **USANG — akan dihapus** (lihat #19).
+  Diganti Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + layout Nexus Dashboard
 - `Modules\` namespace ter-daftar di `composer.json` autoload, 18 folder modul dengan
   sub-folder standar sudah ada (banyak masih kosong/`.gitkeep` — itu wajar, isi sesuai
   kebutuhan modul masing-masing saat dikerjakan)
 - Tenancy fondasi lengkap & TERUJI: migration `tenants`/`branches`/`tenant_user`/
   `warehouses`, model `Modules\Shared\Models\Tenant`, `Modules\MasterData\Models\{Branch,Warehouse}`,
   trait `Modules\Shared\Traits\BelongsToTenant` (auto-fill + global scope), service
-  `Modules\Shared\Support\TenantContext` (baca dari `Filament::getTenant()`, override
-  manual untuk test/artisan/API nanti)
+  `Modules\Shared\Support\TenantContext` (~~baca dari `Filament::getTenant()`~~ akan
+  diubah ke session-based, lihat #19; override manual untuk test/artisan/API nanti)
 - `Modules\Shared\Exceptions\DomainException` (base) + 2 contoh subclass
   (`InsufficientStockException`, `Modules\SerialNumber\Exceptions\DuplicateSerialUnitException`
   — nama terbaru, lihat #18) + Handler mapping JSON di `bootstrap/app.php` (API/webhook) +
-  trait `CatchesDomainExceptions` (pola notifikasi Filament, dipakai nanti saat ada
-  Filament action pertama)
+  trait `CatchesDomainExceptions` (~~pola notifikasi Filament~~ akan diubah ke DaisyUI
+  toast/alert, lihat #19)
 - Audit log generik: trait `Modules\Shared\Traits\Auditable` + `AuditLogObserver`, TERUJI
   (created/updated/deleted semua tercatat). **Catatan teknis penting**: JANGAN pakai
   `static::observe()` di dalam `boot{Trait}()` — itu memicu `new static` yang bikin
@@ -44,11 +46,10 @@ dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). 
   (unit: DomainException; feature: isolasi tenant + rollback transaksi — lihat
   `tests/Feature/Modules/MasterData/BranchTenantIsolationTest.php` sebagai TEMPLATE pola
   testing tenant untuk modul lain), skeleton `tests/k6/` + 1 script jalan (`_shared/smoke.js`)
-- **Navigasi sidebar lengkap** (`docs/00-status.md` #17): 27 halaman placeholder di
-  `app/Filament/Pages/*Page.php`, satu per modul + grup "Utiliti" 9-item meniru
-  referensi persis. Diverifikasi render di browser, TAPI **isinya masih placeholder
-  kosong** — jangan anggap fitur modul manapun sudah beneran ada cuma karena nav-nya
-  sudah ada. Visual masih default Filament (Amber), belum di-modernkan (sengaja ditunda).
+- ~~**Navigasi sidebar lengkap** (`docs/00-status.md` #17): 27 halaman placeholder di
+  `app/Filament/Pages/*Page.php`~~ **USANG — akan dihapus dan diganti** (lihat #19).
+  Placeholder Filament ini akan diganti dengan Blade view + controller/Livewire component
+  menggunakan layout drawer-based DaisyUI (Nexus Dashboard pattern).
 - **Modul "IMEI Management" sudah di-rename jadi "Serial Number Management"** (`docs/00-status.md`
   #18) — `Modules/Imei/` **tidak ada lagi**, sekarang `Modules/SerialNumber/`. Kalau lihat
   referensi ke `Modules\Imei\...` di kode manapun (seharusnya tidak ada lagi setelah rename
@@ -58,8 +59,8 @@ dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). 
 balik 27 halaman navigasi (semua masih placeholder "belum dibangun"), route API
 (`routes/api.php` belum dibuat), model bisnis modul manapun selain Tenant/Branch/Warehouse
 (Product, Order, SerialUnit, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
-user percobaan lokal untuk testing manual, lihat #17), deployment/hosting apapun, custom
-Filament theme/styling premium (masih default Filament).
+user percobaan lokal untuk testing manual, lihat #17), deployment/hosting apapun, layout
+DaisyUI/Nexus Dashboard (belum diimplementasi, baru di-blueprint — lihat #19).
 
 **Sedang berlangsung (independen dari progress coding di atas)**: user mengumpulkan
 screenshot referensi (produk sejenis: SISCOM ERP) secara bertahap ke folder `ref-gambar/`,
@@ -271,6 +272,41 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       modul IMEI/Serial Number saja, bukan rebrand. Kalau nanti user juga minta
       generalisasi visi/nama produk dari "toko HP" ke "toko elektronik", itu perubahan
       terpisah, jangan diasumsikan dari entri ini.
+
+19. **~~Frontend/admin panel: Filament~~ → DIBALIK, drop Filament sepenuhnya. Ganti ke
+    Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + layout custom (Nexus Dashboard).** Semua
+    keputusan sebelumnya yang menjadikan Filament sebagai tulang punggung admin panel (#6,
+    #12, #17) **sudah tidak berlaku lagi**. Keputusan baru:
+    - **Styling**: **Tailwind CSS 4 + DaisyUI 5** — DaisyUI memberikan component library
+      siap pakai (button, card, table, modal, drawer, navbar, toast, dll) + semantic color
+      tokens + theming/dark mode built-in via `data-theme` attribute.
+    - **Auth**: **Laravel Breeze** (Blade stack) — menggantikan Filament auth. Breeze
+      menyediakan login/register/reset password + controller + view yang bisa dicustomisasi
+      sepenuhnya, sudah include Tailwind CSS.
+    - **Layout dashboard**: mengikuti pola **DaisyUI Nexus Dashboard (Growth)**
+      (`https://nexus.daisyui.com/dashboards/growth`) — drawer-based sidebar (DaisyUI
+      `drawer`, `lg:drawer-open` di desktop, collapsible di mobile) + top header/navbar
+      (DaisyUI `navbar`, sticky, berisi search/notif/tenant-switcher/user-menu) + main
+      content area grid-based.
+    - **CRUD/admin**: dibangun manual menggunakan **Blade + Livewire + DaisyUI components**
+      (table, form, modal) — bukan lagi Filament Resource.
+    - **Tenancy**: Filament native Tenancy (`Panel::tenant()`, `Filament::getTenant()`)
+      **dihapus**. Diganti dengan mekanisme custom: **session-based tenant context +
+      middleware `ResolveTenantContext`** + dropdown tenant switcher di header/navbar
+      (DaisyUI dropdown component). `TenantContext` singleton tetap dipakai, tapi sumber
+      tenant-nya dari session (bukan dari Filament).
+    - **27 halaman placeholder Filament** (`app/Filament/Pages/*Page.php` +
+      `resources/views/filament/pages/*.blade.php`) **akan dihapus** dan digantikan dengan
+      Blade view + controller/Livewire component menggunakan layout drawer-based DaisyUI.
+    - **Konsekuensi untuk navigasi sidebar**: sebelumnya Filament otomatis generate sidebar
+      dari Page/Resource yang terdaftar. Sekarang sidebar dibangun manual sebagai Blade
+      component dalam layout drawer, dengan menu items yang dikonfigurasi secara eksplisit.
+    - **Konsekuensi untuk Livewire custom** (POS Kasir, Packing Station): sebelumnya
+      berjalan DI DALAM Filament panel sebagai custom page. Sekarang berjalan di dalam
+      layout drawer-based yang sama — tidak ada lagi perbedaan "Filament page" vs "Livewire
+      custom page", semuanya pakai layout yang sama.
+    - Entri #6, #12, #17 di atas **dibiarkan tercatat apa adanya** (bukan dihapus) supaya
+      jejak perubahan arah tetap kelihatan.
 
 ## Pending / belum diputuskan
 

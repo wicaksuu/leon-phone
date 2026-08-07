@@ -41,53 +41,45 @@ Modules/<Nama>/
 ├── Policies/         ← otorisasi per model, dipakai juga oleh approval workflow
 ├── Repositories/      ← query kompleks yang dipakai berulang, opsional untuk CRUD sederhana
 ├── Requests/          ← FormRequest, validasi input
-├── Resources/          ← API/Filament resource transformer
+├── Resources/          ← API resource transformer
 ├── Rules/               ← validation rule custom
 ├── Services/             ← orkestrasi Actions, tempat DB::transaction() dipanggil
 └── Traits/
 ```
 
-**Aturan penempatan logic**: Controller/Livewire component/Filament resource **memanggil**
+**Aturan penempatan logic**: Controller/Livewire component **memanggil**
 Service atau Action, tidak pernah menulis query/business rule langsung. Ini yang membuat
-logic bisa dites tanpa HTTP layer dan bisa dipakai ulang lintas entry point (Filament, POS
+logic bisa dites tanpa HTTP layer dan bisa dipakai ulang lintas entry point (Blade View, POS
 Livewire, API webhook marketplace).
 
-## Kapan Filament, kapan Livewire custom
+## Pilihan Teknis: Blade Static vs Livewire Component
 
-> Riwayat: sempat direncanakan pecah jadi Filament (backend agent) + REST API/React
-> (frontend agent) supaya 2 AI agent kerja paralel independen. **Dibatalkan** — balik ke
-> satu codebase Laravel penuh (Filament + Livewire), lihat `docs/00-status.md` #12.
+Seluruh UI dibangun menggunakan **Tailwind CSS 4 + DaisyUI 5** dengan tata letak modular (Drawer-based layout terinspirasi dari [DaisyUI Nexus Dashboard Growth](https://nexus.daisyui.com/dashboards/growth)). Pemilihan teknologi halaman ditentukan berdasarkan interaktivitas:
 
-| Kriteria | Filament | Livewire custom |
+| Kriteria | Blade View (Static/Simple) | Livewire Component |
 |---|---|---|
-| CRUD standar dengan form/table/filter | ✅ | |
-| Approval workflow (list + detail + tombol approve/reject) | ✅ | |
-| Report dengan tabel & chart | ✅ (Filament widgets) | |
+| CRUD standar (Form edit/create sederhana, table non-realtime) | ✅ | |
+| Setup awal / Konfigurasi statis | ✅ | |
+| Approval workflow (list + detail + tombol approve/reject sederhana) | ✅ | |
+| Tampilan Laporan statis (chart statis, export data) | ✅ | |
 | Butuh scan-scan berturut cepat (barcode/IMEI/Serial Number) dengan feedback instan | | ✅ |
 | Alur linear ketat dengan validasi hard-stop (Packing Station) | | ✅ |
-| Layar kasir dengan keyboard shortcut, split payment, print thermal | | ✅ |
+| Layar kasir dengan keyboard shortcut, split payment, real-time calculation | | ✅ |
+| Real-time dashboard widgets (counters, live feed) | | ✅ |
 
-Modul yang **seluruhnya** Filament: Master Data, Purchasing, Finance, Akuntansi, HR,
-Report, Setting, Dashboard (widget bawaan Filament pas untuk stat card/chart di dashboard
-admin — lihat referensi `ref-gambar/`), sebagian besar Inventory (Stock, Mutasi, Stock
-Opname sebagai *review/approval* screen — proses scan-nya sendiri tetap custom).
+Modul yang **sebagian besar menggunakan Blade View**: Master Data (CRUD dasar), Purchasing (management PO), Finance, Akuntansi (COA, Jurnal), HR (kelola user/karyawan), Setting.
 
-Modul yang **seluruhnya/sebagian besar** custom Livewire: POS Kasir, Packing Station, layar
-scan unit (IMEI/Serial Number) saat Receive Barang, layar scan saat Stock Opname. Livewire
-component ini bisa ditempel sebagai Filament custom page (tetap dalam satu panel/navigasi)
-atau route Livewire mandiri — detail teknis diputuskan saat mulai coding, bukan sekarang.
+Modul yang **sebagian besar menggunakan Livewire Component**: POS Kasir, Packing Station, Layar scan serial unit saat Barang Masuk (Receive) dan Stock Opname, serta Dashboard interaktif.
 
-Modul campuran: Order Management (list & detail = Filament, tapi aksi-aksi cepat seperti
-"tandai picking" bisa custom); Marketplace (konfigurasi & log = Filament, webhook
-ingestion = job/queue, bukan UI sama sekali).
+Modul campuran: Order Management (list order menggunakan Blade view, tapi halaman detail/aksi cepat seperti picking menggunakan Livewire); Marketplace (konfigurasi & log = Blade view, webhook ingestion = job/queue).
 
 ## Marketplace Engine
 
-Setiap marketplace punya adapter sendiri yang mengimplementasikan satu interface kontrak
-(`MarketplaceAdapterInterface`): `fetchOrders()`, `pushStock()`, `updateOrderStatus()`, dll.
-Engine tidak tahu detail Shopee vs Tokopedia — dia hanya memanggil interface itu dan
-menyerap hasilnya menjadi record `Order` yang seragam. Adapter baru = implementasi baru,
-tidak menyentuh kode Order Management yang sudah ada.
+Every marketplace has its own adapter implementing a single interface contract
+(`MarketplaceAdapterInterface`): `fetchOrders()`, `pushStock()`, `updateOrderStatus()`, etc.
+The engine does not know the details of Shopee vs Tokopedia — it only calls that interface
+and processes the results into a uniform `Order` record. Adding a new marketplace = adding
+a new adapter implementation, without touching existing Order Management code.
 
 ## Desain untuk error handling & transaksi (ringkas — detail penuh di 05)
 
@@ -106,7 +98,7 @@ pernah lambat gara-gara proses background.
 
 Endpoint API (dipakai untuk webhook marketplace, dan opsional untuk app mobile staf gudang
 di masa depan — bukan sebagai primary interface, lihat `docs/00-status.md` #12) hidup di
-`routes/api.php`, memanggil Service yang sama dengan yang dipakai Filament/Livewire — satu
+`routes/api.php`, memanggil Service yang sama dengan yang dipakai Blade/Livewire — satu
 sumber kebenaran logic, banyak entry point.
 
 ## Observability & Realtime

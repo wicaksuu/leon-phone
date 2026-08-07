@@ -10,9 +10,10 @@ unit/IMEI histori harus benar sejak Fase 1 karena semua modul lain bergantung pa
 > di Fase 1).
 
 ## Fase 1 — Fondasi
-- Setup project Laravel versi terbaru + MySQL 8.0 + Filament + konvensi `Modules/*`
+- Setup project Laravel versi terbaru + MySQL 8.0 + Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + konvensi `Modules/*`
 - **Tenancy** (`docs/08-tenancy.md`): tabel `tenants`/`branches`/`tenant_user`, trait
-  `BelongsToTenant` + global scope, Filament native Tenancy dikonfigurasi. Ini FONDASI —
+  `BelongsToTenant` + global scope, custom session-based tenant context + middleware
+  `ResolveTenantContext` + dropdown tenant switcher di header/navbar. Ini FONDASI —
   semua modul berikutnya bergantung pada ini benar sejak awal (menambah tenant scoping
   belakangan ke tabel yang sudah berisi data jauh lebih berisiko daripada dari awal).
 - Autentikasi, Role & Permission **per-tenant** (dasar untuk approval workflow di

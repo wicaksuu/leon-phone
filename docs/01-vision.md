@@ -25,14 +25,16 @@ Sistem ini dipakai oleh **banyak PT** (perusahaan/toko retail HP) sekaligus, sat
 instalasi untuk semua. Konsekuensi desain:
 
 - **Setiap tabel bisnis punya kolom `tenant_id`**, dan setiap query WAJIB ter-scope oleh
-  itu — tidak ada pengecualian. Mekanisme wajib (trait + global scope + Filament tenancy)
-  ada di `docs/08-tenancy.md`, bukan sesuatu yang diimplementasi ad-hoc per modul.
+  itu — tidak ada pengecualian. Mekanisme wajib (trait + global scope + middleware
+  `ResolveTenantContext`) ada di `docs/08-tenancy.md`, bukan sesuatu yang diimplementasi
+  ad-hoc per modul.
 - Isolasi data pakai **shared database**, bukan database terpisah per PT — satu MySQL 8.0,
   semua PT, dipisahkan lewat `tenant_id`. (Ini beda dari referensi visual SISCOM yang
   dipakai sebagai acuan struktur menu — SISCOM pakai database terpisah per PT. Kita
   sengaja tidak ikut pola itu karena lebih sederhana dioperasikan untuk skala saat ini.)
 - Hierarki di dalam satu PT: **PT → Cabang → Gudang**. Satu user bisa punya akses ke lebih
-  dari satu PT dan memilih PT aktif setelah login (tenant switcher).
+  dari satu PT dan memilih PT aktif setelah login (tenant switcher di header/navbar —
+  lihat `docs/08-tenancy.md` dan `docs/00-status.md` #19).
 - Kompleksitas tenancy ini **tidak menghapus** kompleksitas operasional yang sudah jadi
   fokus dari awal: histori unit (IMEI/Serial Number) yang tidak boleh bolong, stok yang
   tidak boleh minus tanpa sebab, setiap perubahan uang/stok yang bisa diaudit — itu semua

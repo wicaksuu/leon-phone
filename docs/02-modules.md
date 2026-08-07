@@ -13,7 +13,8 @@ Ringkasan operasional harian, bukan tempat input data.
 - Notifikasi marketplace (gagal sinkron, order baru masuk)
 
 ## 2. Master Data
-Data referensi yang dipakai modul lain. CRUD murni → kandidat kuat untuk Filament Resource.
+Data referensi yang dipakai modul lain. CRUD murni → kandidat kuat untuk Blade+Livewire
+table/form (DaisyUI `table` + `form` components) dengan pola standar.
 Brand · Kategori · Produk · Varian · **Cabang · Gudang** (hierarki PT → Cabang → Gudang,
 lihat `docs/08-tenancy.md`) · Supplier · Customer · Karyawan · Marketplace · Kurir ·
 Metode Pembayaran.
@@ -71,7 +72,7 @@ Draft → Pending Payment → Paid → Picking → Packing → Packed → Waitin
 Status tambahan yang bisa terjadi di titik manapun: `Cancel · Return · Refund · Warranty`.
 
 ## 7. POS Kasir
-Layar transaksi offline. **Custom Livewire**, bukan Filament resource (butuh kecepatan input
+Layar transaksi offline. **Custom Livewire**, bukan CRUD table biasa (butuh kecepatan input
 scan berturut-turut). Scan barcode/IMEI/Serial Number · Diskon · Voucher · Member ·
 QRIS/Cash/Transfer · Split Payment · Print Thermal · Invoice PDF.
 

@@ -27,8 +27,8 @@ produksi.
 ### Satu tempat menangani exception → response konsisten
 `bootstrap/app.php` (atau `Handler` di versi Laravel yang dipakai) memetakan
 `DomainException` turunan ke:
-- **Filament**: notification merah dengan pesan exception, form tidak ke-reset kalau gagal.
-- **Livewire (POS/Packing)**: event ke frontend → toast error, tanpa reload halaman.
+- **Web (Blade/Livewire)**: menampilkan Alert/Toast DaisyUI merah dengan pesan exception, input form dipertahankan agar tidak ke-reset.
+- **Livewire (POS/Packing/Dashboard)**: trigger browser event (`dispatch`) -> toast error DaisyUI instan tanpa reload halaman.
 - **API/webhook marketplace**: JSON `{ "error": { "code": ..., "message": ... } }` dengan
   HTTP status yang sesuai (422 untuk validasi domain, 409 untuk conflict/stok, dst).
 
@@ -77,7 +77,7 @@ Kalau Service A memanggil Service B yang juga butuh transaction, biarkan Laravel
 menangani nested transaction (savepoint otomatis) — tapi **hindari mendesain Service B
 untuk dipanggil berdiri sendiri dari luar sebuah transaction yang lebih besar** kalau dia
 sebenarnya selalu jadi bagian dari alur yang lebih besar itu. Kalau Service B memang harus
-valid berdiri sendiri (dipanggil langsung dari Livewire/Filament juga), dia boleh punya
+valid berdiri sendiri (dipanggil langsung dari Controller/Livewire juga), dia boleh punya
 `DB::transaction()` sendiri — Laravel akan treat sebagai savepoint kalau dipanggil nested.
 
 Test rollback untuk Service semacam ini masuk ke trio testing wajib § 4 di bawah — bukan
@@ -89,7 +89,7 @@ opsional tambahan.
   Dipakai saat operasi dipanggil dari banyak tempat (mis. `CreateSerialUnitHistoryAction`
   dipakai dari Purchasing, Order, Return, Warranty).
 - **Services** = orkestrasi beberapa Actions + transaction boundary. Ini yang dipanggil dari
-  Controller/Livewire/Filament.
+  Controller/Livewire.
 - **DTOs** untuk data yang lewat antar layer (bukan `array` mentah, bukan `Request` object
   yang dipassing ke Service — Service tidak boleh tahu soal HTTP).
 - **Enums** (PHP native `enum`) untuk semua status (`OrderStatus`, `SerialIdentifierType`,
@@ -103,8 +103,8 @@ opsional tambahan.
 ## 4. Testing — wajib 3 jenis untuk setiap fitur/endpoint baru
 
 > Ini permintaan eksplisit user (`docs/00-status.md` #8), bukan cuma "best practice
-> umum". PR yang menambah/mengubah Service, Action, Livewire component, atau Filament
-> resource **dianggap belum selesai** tanpa ketiganya. Reviewer (AI atau manusia) berhak
+> umum". PR yang menambah/mengubah Service, Action, Livewire component, atau Controller
+> **dianggap belum selesai** tanpa ketiganya. Reviewer (AI atau manusia) berhak
 > menolak PR yang cuma punya sebagian.
 
 ### a. Unit test
@@ -114,7 +114,7 @@ enum tidak boleh transisi dari `Completed` balik ke `Draft` — ini murni logic,
 HTTP request untuk membuktikannya.
 
 ### b. Feature / Integration test
-Target: satu resource Filament atau satu Livewire component/route, end-to-end lewat HTTP
+Target: satu route Controller atau satu Livewire component/route, end-to-end lewat HTTP
 test client Laravel — assert status code/redirect, assert isi halaman/response, DAN assert
 efek di database (termasuk rollback: request yang gagal di tengah tidak boleh menyisakan
 data setengah jadi — lihat § 2 di atas). **Wajib juga mencakup isolasi tenant**
