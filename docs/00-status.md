@@ -43,11 +43,18 @@ dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). 
   (unit: DomainException; feature: isolasi tenant + rollback transaksi — lihat
   `tests/Feature/Modules/MasterData/BranchTenantIsolationTest.php` sebagai TEMPLATE pola
   testing tenant untuk modul lain), skeleton `tests/k6/` + 1 script jalan (`_shared/smoke.js`)
+- **Navigasi sidebar lengkap** (`docs/00-status.md` #17): 27 halaman placeholder di
+  `app/Filament/Pages/*Page.php`, satu per modul + grup "Utiliti" 9-item meniru
+  referensi persis. Diverifikasi render di browser, TAPI **isinya masih placeholder
+  kosong** — jangan anggap fitur modul manapun sudah beneran ada cuma karena nav-nya
+  sudah ada. Visual masih default Filament (Amber), belum di-modernkan (sengaja ditunda).
 
-**Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, resource Filament
-apapun (belum ada satu Resource/Page pun), route API (`routes/api.php` belum dibuat),
-model bisnis modul manapun selain Tenant/Branch/Warehouse (Product, Order, IMEI, dll semua
-masih kosong), seeder data contoh, deployment/hosting apapun.
+**Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, **isi asli** di
+balik 27 halaman navigasi (semua masih placeholder "belum dibangun"), route API
+(`routes/api.php` belum dibuat), model bisnis modul manapun selain Tenant/Branch/Warehouse
+(Product, Order, IMEI, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
+user percobaan lokal untuk testing manual, lihat #17), deployment/hosting apapun, custom
+Filament theme/styling premium (masih default Filament).
 
 **Sedang berlangsung (independen dari progress coding di atas)**: user mengumpulkan
 screenshot referensi (produk sejenis: SISCOM ERP) secara bertahap ke folder `ref-gambar/`,
@@ -196,6 +203,34 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
     dibutuhkan untuk push). Karena token itu sempat ditulis plaintext di chat, idealnya
     di-revoke dan diganti token baru dengan scope minimal (`repo` saja cukup) begitu ada
     kesempatan — ini belum ditindaklanjuti di sesi ini, cek apakah user sudah lakukan.
+
+17. **Navigasi/sidebar Filament dibangun duluan, konten & label mirip referensi SISCOM,
+    visual TETAP baru (belum dimodernkan).** User awalnya minta "sangat mirip" ke
+    referensi (termasuk warna navy dll), lalu diklarifikasi ulang jadi lebih sempit:
+    **cuma teks/label/struktur menu yang mirip, desain visual dimodernkan belakangan**
+    ("tulisan dan isinya aja yang mirip untuk desain kan akan kita modernkan belakangan").
+    Ini konsisten dengan keputusan awal di `docs/06-ui-ux-guidelines.md` (struktur ikut
+    referensi, tampilan didesain baru) — sempat nyaris dibalik, tapi akhirnya balik lagi
+    ke prinsip awal.
+    - 27 halaman Filament placeholder dibuat di `app/Filament/Pages/*Page.php` +
+      `resources/views/filament/pages/*.blade.php`, meng-cover semua 18 modul kita
+      (bukan cuma 9 grup di referensi).
+    - **Grup "Utiliti" sengaja meniru PERSIS 9 item di referensi** (Setting Cabang,
+      Setting Default, Setting Password, Setting Menu User, Maintenance Data, Ganti
+      Periode, Tutup Periode, Buka Kunci Data, Validasi Data) — walaupun
+      `docs/02-modules.md` §18 secara konsep menaruh 4 item terakhir (manajemen periode)
+      sebagai bagian dari modul Akuntansi. **Ini bukan kontradiksi**: pengelompokan
+      NAVIGASI (presentasi/UX di sidebar) sengaja dibuat beda dari pengelompokan MODUL
+      KODE (`Modules/Accounting/` tetap pemilik logic-nya) — nav grouping ≠ code module
+      ownership. Kalau nanti dibangun betulan, Service-nya tetap di
+      `Modules/Accounting/Services/`, cuma link navigasinya nampil di grup "Utiliti".
+    - Semua halaman masih placeholder ("belum dibangun") — isi asli dibangun sesuai
+      urutan `docs/07-roadmap.md`, bukan sekarang.
+    - Diverifikasi jalan di browser (login pakai user percobaan `admin@leonphone.test` /
+      `password`, tenant `leon` — data lokal, tidak di-push ke manapun karena DB tidak
+      di-git). Screenshot tidak disimpan, cuma verifikasi visual sesi ini.
+    - **Belum dikerjakan**: styling navy/premium (sengaja ditunda, "belakangan"), theme
+      custom Filament (`php artisan make:filament-theme` belum dijalankan).
 
 ## Pending / belum diputuskan
 
