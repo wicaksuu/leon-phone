@@ -48,10 +48,10 @@ terbaca) di breakpoint manapun sebelum sebuah fitur dianggap selesai.
 
 ## Interaksi khusus layar operasional (POS Kasir & Packing Station)
 
-- **Scan-first**: input barcode/IMEI selalu auto-focus, tidak butuh klik dulu.
+- **Scan-first**: input barcode/IMEI/Serial Number selalu auto-focus, tidak butuh klik dulu.
 - **Feedback instan** (< 200ms terasa) untuk tiap scan: sukses (hijau, suara opsional) atau
   gagal (merah, alasan singkat) — tanpa modal yang menghalangi scan berikutnya, kecuali
-  memang harus hard-stop (mis. Packing Station § IMEI salah).
+  memang harus hard-stop (mis. Packing Station § unit salah).
 - **Keyboard-first di POS Kasir**: shortcut untuk pembayaran cepat, tidak wajib mouse.
 - **State tidak boleh hilang** kalau koneksi sempat putus sebentar — Livewire component
   pakai `wire:offline` handling minimal (disable input + pesan jelas), bukan diam-diam

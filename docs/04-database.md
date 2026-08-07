@@ -11,9 +11,10 @@
 - Charset `utf8mb4` (dukung emoji di catatan/keluhan servis, nama customer, dll).
 - Primary key `BIGINT UNSIGNED AUTO_INCREMENT id`, konsisten dengan konvensi Laravel.
 - Foreign key eksplisit dengan `onDelete('restrict')` sebagai default — data operasional
-  (stok, order, IMEI) **tidak boleh** terhapus cascade diam-diam. Soft delete
-  (`deleted_at`) dipakai di master data (Produk, Customer, Supplier), bukan di transaksi.
-- Nama tabel: snake_case jamak (`purchase_orders`, `imei_histories`).
+  (stok, order, unit ber-IMEI/Serial Number) **tidak boleh** terhapus cascade diam-diam.
+  Soft delete (`deleted_at`) dipakai di master data (Produk, Customer, Supplier), bukan di
+  transaksi.
+- Nama tabel: snake_case jamak (`purchase_orders`, `serial_unit_histories`).
 - Setiap tabel transaksi/master penting punya `created_by` / `updated_by` (FK ke `users`)
   selain timestamp standar — dasar untuk audit log.
 - **`tenant_id` (FK ke `tenants`) wajib di SEMUA tabel bisnis** (lihat `docs/08-tenancy.md`)
@@ -42,38 +43,50 @@ Detail penuh model tenancy (kenapa shared-DB, resolusi tenant context, dst) → 
 
 ## Entitas kunci
 
-### IMEI lifecycle
-Satu tabel `imeis` (unit fisik) + satu tabel `imei_histories` (log kejadian, append-only).
-`imei` sendiri unique **per tenant** (`unique(tenant_id, imei)`), bukan global — dua tenant
-berbeda secara teori bisa punya entri untuk IMEI yang "sama" kalau datanya salah input,
-sistem tidak menganggap itu error lintas-tenant karena mereka memang tidak saling tahu.
+### Serial unit lifecycle
+> Digeneralisasi dari "IMEI lifecycle" (`docs/00-status.md` #18) — IMEI cuma satu **tipe**
+> identifier (khusus HP), barang elektronik lain (TV, mesin cuci, dst — lihat contoh
+> produk di `ref-gambar/`) pakai Serial Number biasa. Struktur tabel di bawah generik
+> untuk keduanya, dibedakan lewat kolom `identifier_type`.
+
+Satu tabel `serial_units` (unit fisik) + satu tabel `serial_unit_histories` (log kejadian,
+append-only). `identifier_value` unique **per tenant per tipe**
+(`unique(tenant_id, identifier_type, identifier_value)`), bukan global — dua tenant
+berbeda secara teori bisa punya entri untuk identifier yang "sama" kalau datanya salah
+input, sistem tidak menganggap itu error lintas-tenant karena mereka memang tidak saling
+tahu.
 
 ```
-imeis
-  id, tenant_id, imei, product_variant_id, current_status (enum: in_stock/reserved/sold/
-  returned/service/lost/damaged), current_warehouse_id, current_rack_id,
-  current_marketplace_id (nullable), created_at, updated_at
+serial_units
+  id, tenant_id, identifier_type (enum: imei/serial_number — lihat
+  Modules\SerialNumber\Enums\SerialIdentifierType), identifier_value, product_variant_id,
+  current_status (enum: in_stock/reserved/sold/returned/service/lost/damaged),
+  current_warehouse_id, current_rack_id, current_marketplace_id (nullable),
+  created_at, updated_at
 
-imei_histories   (append-only — tidak pernah di-update/delete)
-  id, tenant_id, imei_id, event_type (enum: received/moved/reserved/sold/returned/
+serial_unit_histories   (append-only — tidak pernah di-update/delete)
+  id, tenant_id, serial_unit_id, event_type (enum: received/moved/reserved/sold/returned/
   warranty_claim/service/lost/found), reference_type, reference_id (polymorphic ke PO/
   Order/Return/Warranty/Service), warehouse_id, notes, actor_id, created_at
 ```
 
-`current_status` di `imeis` adalah **proyeksi/cache** dari histori terbaru — sumber
-kebenaran tetap `imei_histories`. Kalau ada bug ketidaksesuaian, rebuild `current_status`
-dari histori, jangan pernah edit `current_status` manual tanpa entry histori baru.
+`current_status` di `serial_units` adalah **proyeksi/cache** dari histori terbaru — sumber
+kebenaran tetap `serial_unit_histories`. Kalau ada bug ketidaksesuaian, rebuild
+`current_status` dari histori, jangan pernah edit `current_status` manual tanpa entry
+histori baru.
 
-### Stock (agregat, terpisah dari IMEI untuk produk non-IMEI seperti aksesoris)
+### Stock (agregat, terpisah dari serial_units untuk barang tanpa identifier individual
+seperti aksesoris)
 ```
 stock_items
   id, tenant_id, product_variant_id, warehouse_id, rack_id (nullable),
   marketplace_id (nullable), status (enum: available/reserved/damaged/lost), quantity,
   updated_at
 ```
-Untuk produk ber-IMEI (HP), `quantity` selalu 1 dan idealnya sinkron 1:1 dengan `imeis`
-yang statusnya sesuai — validasi ini dijalankan sebagai invariant check, bukan constraint
-DB literal (karena melibatkan logika lintas tabel).
+Untuk produk ber-unit (HP via IMEI, elektronik lain via Serial Number), `quantity` selalu
+1 dan idealnya sinkron 1:1 dengan `serial_units` yang statusnya sesuai — validasi ini
+dijalankan sebagai invariant check, bukan constraint DB literal (karena melibatkan logika
+lintas tabel).
 
 ### Order (satu struktur untuk semua channel)
 ```
@@ -85,10 +98,10 @@ orders
   created_at, updated_at
 
 order_items
-  id, tenant_id, order_id, product_variant_id, imei_id (nullable — hanya untuk produk
-  ber-IMEI), qty, price, discount
+  id, tenant_id, order_id, product_variant_id, serial_unit_id (nullable — hanya untuk
+  produk ber-unit/IMEI/Serial Number), qty, price, discount
 
-order_status_histories   (append-only, sama prinsipnya dengan imei_histories)
+order_status_histories   (append-only, sama prinsipnya dengan serial_unit_histories)
   id, tenant_id, order_id, from_status, to_status, actor_id, notes, created_at
 ```
 
@@ -134,14 +147,15 @@ opening_balances        -- Saldo Awal, satu kali setup per tenant per periode aw
 ```
 `journal_lines` total debit harus sama dengan total credit per `journal_entry_id` —
 invariant double-entry ini divalidasi di **Service**, bukan constraint DB literal (sama
-pola dengan invariant IMEI↔Stock di atas).
+pola dengan invariant serial_units↔Stock di atas).
 
 ## Prinsip
 
-1. **Append-only untuk histori** (`imei_histories`, `order_status_histories`, `audit_logs`,
-   `journal_entries` setelah status `posted`) — tidak pernah `UPDATE`/`DELETE`, hanya
-   `INSERT`. Ini yang membuat "scan IMEI → riwayat lengkap muncul" bisa diandalkan, dan
-   yang membuat laporan keuangan tidak bisa diam-diam diubah setelah periode ditutup.
+1. **Append-only untuk histori** (`serial_unit_histories`, `order_status_histories`,
+   `audit_logs`, `journal_entries` setelah status `posted`) — tidak pernah
+   `UPDATE`/`DELETE`, hanya `INSERT`. Ini yang membuat "scan IMEI/Serial Number → riwayat
+   lengkap muncul" bisa diandalkan, dan yang membuat laporan keuangan tidak bisa diam-diam
+   diubah setelah periode ditutup.
 2. **Status "terkini" adalah cache**, histori adalah kebenaran. Kalau ragu, percaya histori.
 3. **`tenant_id` wajib di semua tabel bisnis** (lihat § Konvensi umum di atas dan
    `docs/08-tenancy.md`) — ini keputusan yang membalik draf awal proyek yang sempat

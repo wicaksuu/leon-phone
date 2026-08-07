@@ -13,12 +13,13 @@
 ## Apa ini
 
 Sistem **multi-tenant SaaS**: satu instalasi melayani **banyak PT** (perusahaan/toko retail
-HP) sekaligus. Satu user bisa punya akses ke lebih dari satu PT dan memilih PT aktif setelah
-login (lihat referensi UI di `ref-gambar/`, dibedah di `docs/08-tenancy.md`). Ini bukan
-sekadar "POS" — POS Kasir hanya salah satu modul. Sistem ini adalah **Retail Management
-System**: inventory + IMEI tracking + omnichannel marketplace + purchasing + finance +
-akuntansi + purnajual (retur/garansi/servis) + CRM, dengan POS Kasir & Packing Station
-sebagai titik operasional harian.
+HP & elektronik — lihat `docs/00-status.md` #18, bukan cuma HP) sekaligus. Satu user bisa
+punya akses ke lebih dari satu PT dan memilih PT aktif setelah login (lihat referensi UI di
+`ref-gambar/`, dibedah di `docs/08-tenancy.md`). Ini bukan sekadar "POS" — POS Kasir hanya
+salah satu modul. Sistem ini adalah **Retail Management System**: inventory + tracking unit
+per-IMEI/Serial Number + omnichannel marketplace + purchasing + finance + akuntansi +
+purnajual (retur/garansi/servis) + CRM, dengan POS Kasir & Packing Station sebagai titik
+operasional harian.
 
 Isolasi antar PT memakai pola **shared database + kolom `tenant_id`** (bukan database
 terpisah per PT) — satu database MySQL 8.0, semua tabel bisnis di-scope otomatis per tenant.
@@ -45,7 +46,7 @@ Gudang). Lihat `docs/04-database.md`.
 | Database | **MySQL 8.0** (bukan MariaDB — dibalik saat instalasi, lihat `docs/00-status.md` #14) | Sudah jalan lokal di mesin dev user, alasan praktis, driver Laravel sama (`mysql`) |
 | Multi-tenancy | **Shared DB + `tenant_id`**, via Filament native Tenancy | Filament punya built-in tenant switcher (persis kebutuhan "pilih PT" di referensi) + otomatis scope query resource by tenant — tidak perlu paket tenancy pihak ketiga |
 | Admin/CRUD panel | **Filament** | Modul CRUD-berat (Master Data, Purchasing, Finance, Akuntansi, HR, Report, Setting) dibangun di atas Filament — UI modern bawaan, cepat, konsisten |
-| Layar operasional custom | **Livewire + Tailwind**, DI LUAR/di dalam Filament panel (custom page) | POS Kasir, Packing Station, IMEI scan flow butuh UX real-time (scan barcode/IMEI berturut-turut, feedback instan) yang tidak pas dipaksakan ke Filament resource form biasa |
+| Layar operasional custom | **Livewire + Tailwind**, DI LUAR/di dalam Filament panel (custom page) | POS Kasir, Packing Station, alur scan unit butuh UX real-time (scan barcode/IMEI/Serial Number berturut-turut, feedback instan) yang tidak pas dipaksakan ke Filament resource form biasa |
 | Frontend styling | Tailwind CSS, design token custom (lihat `docs/06-ui-ux-guidelines.md`) | Filament pakai Tailwind juga → satu bahasa desain di seluruh app, satu codebase |
 
 Detail lengkap tiap keputusan → `docs/03-architecture.md`.
@@ -56,7 +57,7 @@ Detail lengkap tiap keputusan → `docs/03-architecture.md`.
 - `docs/01-vision.md` — kenapa RMS bukan POS, siapa pemakainya (§ single-tenant di dalamnya sudah usang, lihat catatan riwayat di atas)
 - `docs/02-modules.md` — daftar & detail 18 modul (Dashboard s/d Akuntansi)
 - `docs/03-architecture.md` — struktur folder `Modules/*`, konvensi Actions/DTOs/Services, kapan Filament vs kapan Livewire custom
-- `docs/04-database.md` — konvensi MySQL 8.0, entitas kunci (tenant/PT/Cabang, IMEI lifecycle, stock states, order status, akuntansi), naming convention
+- `docs/04-database.md` — konvensi MySQL 8.0, entitas kunci (tenant/PT/Cabang, serial unit lifecycle IMEI/SN, stock states, order status, akuntansi), naming convention
 - `docs/05-coding-standards.md` — **wajib dibaca sebelum nulis kode apapun**: error handling, DB transaction/rollback, testing
 - `docs/06-ui-ux-guidelines.md` — standar visual modern/premium/responsive, breakpoint, komponen, log referensi visual (`ref-gambar/`)
 - `docs/07-roadmap.md` — 5 fase implementasi, urutan build
@@ -91,11 +92,14 @@ Yang sudah masuk sejauh ini:
 2. **Setiap operasi yang mengubah data lintas tabel WAJIB dibungkus `DB::transaction()`**
    dan punya rollback path yang jelas. Lihat `docs/05-coding-standards.md`.
 3. **Error handling konsisten**: exception khusus per domain (mis. `InsufficientStockException`,
-   `ImeiAlreadyExistsException`), bukan `throw new Exception('...')` generik. Semua exception
+   `DuplicateSerialUnitException`), bukan `throw new Exception('...')` generik. Semua exception
    ditangani di satu tempat (`Handler`) dengan response format seragam (Filament notification
    untuk admin, JSON terstruktur untuk API/marketplace webhook).
-4. **IMEI adalah entitas kelas satu**, bukan sekadar kolom. Setiap IMEI punya histori penuh
-   (supplier → tanggal masuk → gudang → marketplace → order → customer → garansi → retur).
+4. **Unit ber-identifier (IMEI untuk HP, Serial Number untuk elektronik lain) adalah
+   entitas kelas satu**, bukan sekadar kolom — lihat `docs/00-status.md` #18 kenapa ini
+   digeneralisasi dari "IMEI" murni. Setiap unit punya histori penuh (supplier → tanggal
+   masuk → gudang → marketplace → order → customer → garansi → retur). Barang tanpa
+   identifier individual (aksesoris) TIDAK masuk sini, tetap agregat di `stock_items`.
    Lihat `docs/04-database.md`.
 5. **UI/UX**: semua layar baru harus modern, premium, dan responsive di semua ukuran layar
    (mobile staf gudang, tablet kasir, desktop admin). Ikuti `docs/06-ui-ux-guidelines.md` —
@@ -109,7 +113,7 @@ Yang sudah masuk sejauh ini:
    global scope + Filament tenancy) — jangan implementasi scoping manual ad-hoc per modul.
 9. **Setiap fitur/endpoint baru WAJIB disertai 3 jenis test**: Unit test, Feature/
    Integration test, dan skrip k6 (untuk aksi yang dipanggil frekuensi tinggi seperti
-   POS checkout, scan IMEI, sync marketplace). Lihat `docs/05-coding-standards.md` § Testing.
+   POS checkout, scan serial unit, sync marketplace). Lihat `docs/05-coding-standards.md` § Testing.
    PR/perubahan tanpa ketiganya dianggap belum selesai.
 
 ## Belum diputuskan (tanyakan ke user sebelum asumsi)

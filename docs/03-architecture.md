@@ -8,7 +8,7 @@ Modules/
 ├── Dashboard/
 ├── MasterData/
 ├── Inventory/
-├── Imei/
+├── SerialNumber/      ← eks "Imei/", digeneralisasi (docs/00-status.md #18): IMEI cuma satu tipe identifier
 ├── Marketplace/
 ├── Order/
 ├── Pos/
@@ -31,7 +31,7 @@ Setiap modul (kecuali yang murni read-only seperti Report) punya sub-folder stan
 Modules/<Nama>/
 ├── Actions/        ← satu class = satu operasi bisnis atomik (mis. CreatePurchaseOrder)
 ├── DTOs/            ← data transfer object antar layer, hindari passing array mentah
-├── Enums/            ← status (OrderStatus, ImeiStatus, dll) — PHP native enum, bukan string magic
+├── Enums/            ← status (OrderStatus, SerialIdentifierType, dll) — PHP native enum, bukan string magic
 ├── Events/
 ├── Exceptions/       ← exception spesifik domain (lihat 05-coding-standards.md)
 ├── Jobs/             ← proses async (sinkronisasi marketplace, generate report berat)
@@ -63,7 +63,7 @@ Livewire, API webhook marketplace).
 | CRUD standar dengan form/table/filter | ✅ | |
 | Approval workflow (list + detail + tombol approve/reject) | ✅ | |
 | Report dengan tabel & chart | ✅ (Filament widgets) | |
-| Butuh scan-scan berturut cepat (barcode/IMEI) dengan feedback instan | | ✅ |
+| Butuh scan-scan berturut cepat (barcode/IMEI/Serial Number) dengan feedback instan | | ✅ |
 | Alur linear ketat dengan validasi hard-stop (Packing Station) | | ✅ |
 | Layar kasir dengan keyboard shortcut, split payment, print thermal | | ✅ |
 
@@ -73,9 +73,9 @@ admin — lihat referensi `ref-gambar/`), sebagian besar Inventory (Stock, Mutas
 Opname sebagai *review/approval* screen — proses scan-nya sendiri tetap custom).
 
 Modul yang **seluruhnya/sebagian besar** custom Livewire: POS Kasir, Packing Station, layar
-scan IMEI saat Receive Barang, layar scan saat Stock Opname. Livewire component ini bisa
-ditempel sebagai Filament custom page (tetap dalam satu panel/navigasi) atau route Livewire
-mandiri — detail teknis diputuskan saat mulai coding, bukan sekarang.
+scan unit (IMEI/Serial Number) saat Receive Barang, layar scan saat Stock Opname. Livewire
+component ini bisa ditempel sebagai Filament custom page (tetap dalam satu panel/navigasi)
+atau route Livewire mandiri — detail teknis diputuskan saat mulai coding, bukan sekarang.
 
 Modul campuran: Order Management (list & detail = Filament, tapi aksi-aksi cepat seperti
 "tandai picking" bisa custom); Marketplace (konfigurasi & log = Filament, webhook

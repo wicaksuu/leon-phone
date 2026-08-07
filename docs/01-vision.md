@@ -3,11 +3,12 @@
 ## RMS, bukan POS
 
 POS (Point of Sale) hanya menjawab satu pertanyaan: "bagaimana transaksi di kasir dicatat?".
-Toko HP butuh jauh lebih banyak dari itu: dari mana barang datang (purchasing), berapa
-persisnya stok di tiap lokasi (inventory), siapa yang pegang HP dengan IMEI tertentu
-sekarang (IMEI tracking), bagaimana order dari 5 marketplace berbeda diproses seragam
-(omnichannel), apa yang terjadi kalau HP rusak/diretur (purnajual), dan seberapa untung
-sebenarnya bisnis ini (finance & report).
+Toko HP & elektronik butuh jauh lebih banyak dari itu: dari mana barang datang
+(purchasing), berapa persisnya stok di tiap lokasi (inventory), unit dengan
+IMEI/Serial Number tertentu sekarang ada di mana (tracking per-unit — lihat
+`docs/00-status.md` #18, bukan cuma IMEI/HP), bagaimana order dari 5 marketplace berbeda
+diproses seragam (omnichannel), apa yang terjadi kalau barang rusak/diretur (purnajual),
+dan seberapa untung sebenarnya bisnis ini (finance & report).
 
 Maka sistem ini disebut **Retail Management System**. POS Kasir adalah satu modul di
 dalamnya, bukan pusatnya.
@@ -33,13 +34,13 @@ instalasi untuk semua. Konsekuensi desain:
 - Hierarki di dalam satu PT: **PT → Cabang → Gudang**. Satu user bisa punya akses ke lebih
   dari satu PT dan memilih PT aktif setelah login (tenant switcher).
 - Kompleksitas tenancy ini **tidak menghapus** kompleksitas operasional yang sudah jadi
-  fokus dari awal: histori IMEI yang tidak boleh bolong, stok yang tidak boleh minus tanpa
-  sebab, setiap perubahan uang/stok yang bisa diaudit — itu semua tetap berlaku, sekarang
-  tinggal ditambah satu dimensi lagi (per-tenant).
+  fokus dari awal: histori unit (IMEI/Serial Number) yang tidak boleh bolong, stok yang
+  tidak boleh minus tanpa sebab, setiap perubahan uang/stok yang bisa diaudit — itu semua
+  tetap berlaku, sekarang tinggal ditambah satu dimensi lagi (per-tenant).
 
 ## Siapa pemakainya
 
-- **Kasir** — POS Kasir, transaksi harian, scan barcode/IMEI, split payment.
+- **Kasir** — POS Kasir, transaksi harian, scan barcode/IMEI/Serial Number, split payment.
 - **Admin gudang** — Packing Station, stock opname, mutasi antar gudang, receive barang.
 - **Purchasing/owner** — Purchase Order, supplier, laporan margin.
 - **CS/Marketplace admin** — pantau order masuk dari semua marketplace di satu tempat.
@@ -53,8 +54,10 @@ instalasi untuk semua. Konsekuensi desain:
 
 1. **Kebenaran data > kecepatan development.** Lebih baik operasi gagal total dengan pesan
    jelas daripada berhasil sebagian dan stok/uang jadi tidak sinkron.
-2. **IMEI adalah sumber kebenaran fisik.** Kalau data sistem dan HP fisik tidak cocok,
-   sistem yang salah, bukan HP-nya.
+2. **Unit fisik (IMEI/Serial Number) adalah sumber kebenaran.** Kalau data sistem dan
+   barang fisik tidak cocok, sistem yang salah, bukan barangnya. (Digeneralisasi dari
+   "IMEI" murni — lihat `docs/00-status.md` #18: bukan cuma HP, elektronik lain pakai
+   Serial Number.)
 3. **Semua channel penjualan (offline + marketplace) melewati struktur order yang sama.**
    Tidak ada jalur pintas per-marketplace yang bikin data order jadi tidak seragam.
 4. **Setiap perubahan penting bisa dijawab: siapa, kapan, kenapa.** (Audit log + approval

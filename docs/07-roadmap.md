@@ -1,8 +1,8 @@
 # 07 — Roadmap
 
 Lima fase. **Jangan mulai fase berikutnya sebelum fase sebelumnya stabil** — urutan ini
-dirancang supaya tidak ada perubahan arsitektur besar di tengah jalan (mis. struktur IMEI
-histori harus benar sejak Fase 1 karena semua modul lain bergantung padanya).
+dirancang supaya tidak ada perubahan arsitektur besar di tengah jalan (mis. struktur serial
+unit/IMEI histori harus benar sejak Fase 1 karena semua modul lain bergantung padanya).
 
 > **Testing trio wajib mulai Fase 1**, bukan ditambahkan belakangan (`docs/05-coding-standards.md`
 > § 4) — CI Fase 1 sudah harus jalankan Unit + Feature test tiap PR, k6 minimal ada
@@ -24,22 +24,22 @@ histori harus benar sejak Fase 1 karena semua modul lain bergantung padanya).
 
 ## Fase 2 — Operasional Inti
 - Inventory (Barang Masuk, Stock per gudang/rak, Mutasi, Stock Opname)
-- IMEI Management penuh (entitas + histori append-only)
+- Serial Number Management penuh (entitas + histori append-only, tipe IMEI & Serial Number)
 - Purchasing (PR → PO → Receive → Invoice → Payment)
 - POS Kasir (custom Livewire)
-- k6 mulai serius dipakai di sini: aksi checkout POS & scan IMEI adalah kandidat pertama
-  (`docs/05-coding-standards.md` § 4c)
+- k6 mulai serius dipakai di sini: aksi checkout POS & scan serial unit adalah kandidat
+  pertama (`docs/05-coding-standards.md` § 4c)
 
 → **Sistem sudah bisa dipakai jualan offline sejak akhir fase ini.**
 
 ## Fase 3 — Omnichannel
 - Marketplace Engine + adapter marketplace prioritas pertama (ditentukan user)
 - Order Management (struktur status penuh, satu struktur untuk semua channel)
-- Packing Station (custom Livewire, validasi IMEI hard-stop di Service, bukan cuma di UI)
+- Packing Station (custom Livewire, validasi serial unit hard-stop di Service, bukan cuma di UI)
 - Sinkronisasi stok ke marketplace
 
 ## Fase 4 — Purnajual
-- Return (Marketplace/Offline/DOA, berbasis IMEI)
+- Return (Marketplace/Offline/DOA, berbasis serial unit/IMEI)
 - Garansi (Waiting → Checking → Claim Vendor → Repair → Done)
 - Service (servis umum, sparepart, teknisi)
 - CRM (histori pembelian/garansi, point, voucher, broadcast WA)

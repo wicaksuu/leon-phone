@@ -25,9 +25,10 @@ dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). 
   `Modules\Shared\Support\TenantContext` (baca dari `Filament::getTenant()`, override
   manual untuk test/artisan/API nanti)
 - `Modules\Shared\Exceptions\DomainException` (base) + 2 contoh subclass
-  (`InsufficientStockException`, `ImeiAlreadyExistsException`) + Handler mapping JSON di
-  `bootstrap/app.php` (API/webhook) + trait `CatchesDomainExceptions` (pola notifikasi
-  Filament, dipakai nanti saat ada Filament action pertama)
+  (`InsufficientStockException`, `Modules\SerialNumber\Exceptions\DuplicateSerialUnitException`
+  — nama terbaru, lihat #18) + Handler mapping JSON di `bootstrap/app.php` (API/webhook) +
+  trait `CatchesDomainExceptions` (pola notifikasi Filament, dipakai nanti saat ada
+  Filament action pertama)
 - Audit log generik: trait `Modules\Shared\Traits\Auditable` + `AuditLogObserver`, TERUJI
   (created/updated/deleted semua tercatat). **Catatan teknis penting**: JANGAN pakai
   `static::observe()` di dalam `boot{Trait}()` — itu memicu `new static` yang bikin
@@ -48,11 +49,15 @@ dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). 
   referensi persis. Diverifikasi render di browser, TAPI **isinya masih placeholder
   kosong** — jangan anggap fitur modul manapun sudah beneran ada cuma karena nav-nya
   sudah ada. Visual masih default Filament (Amber), belum di-modernkan (sengaja ditunda).
+- **Modul "IMEI Management" sudah di-rename jadi "Serial Number Management"** (`docs/00-status.md`
+  #18) — `Modules/Imei/` **tidak ada lagi**, sekarang `Modules/SerialNumber/`. Kalau lihat
+  referensi ke `Modules\Imei\...` di kode manapun (seharusnya tidak ada lagi setelah rename
+  ini), itu bug/sisa lama yang harus diperbaiki, bukan pola yang harus diikuti.
 
 **Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, **isi asli** di
 balik 27 halaman navigasi (semua masih placeholder "belum dibangun"), route API
 (`routes/api.php` belum dibuat), model bisnis modul manapun selain Tenant/Branch/Warehouse
-(Product, Order, IMEI, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
+(Product, Order, SerialUnit, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
 user percobaan lokal untuk testing manual, lihat #17), deployment/hosting apapun, custom
 Filament theme/styling premium (masih default Filament).
 
@@ -231,6 +236,41 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       di-git). Screenshot tidak disimpan, cuma verifikasi visual sesi ini.
     - **Belum dikerjakan**: styling navy/premium (sengaja ditunda, "belakangan"), theme
       custom Filament (`php artisan make:filament-theme` belum dijalankan).
+
+18. **"IMEI Management" digeneralisasi jadi "Serial Number Management".** User sadar IMEI
+    cuma satu jenis identifier unit (khusus HP) — toko ini (lihat data contoh di
+    `ref-gambar/` § dashboard: TV Polytron, TV Sharp, Samsung Smart TV, Arashi Mesin Cuci)
+    jual banyak elektronik lain yang pakai Serial Number biasa, bukan IMEI. Modul
+    di-generalisasi supaya satu struktur (histori append-only, lifecycle
+    supplier→gudang→order→garansi→retur) berlaku untuk KEDUANYA, dibedakan lewat kolom
+    `identifier_type`. Keputusan terkait:
+    - **IMEI jadi salah satu TIPE** di dalam modul yang lebih umum (bukan dua modul
+      terpisah) — opsi yang dipilih user vs alternatif "Unit Tracking" (nama lebih netral,
+      tidak dipilih).
+    - **Barang tanpa identifier individual sama sekali** (aksesoris, sparepart kecil)
+      **TETAP** di `stock_items` (quantity-based, terpisah dari modul ini) — TIDAK
+      dipaksa masuk sebagai unit ber-`identifier_type=none`. Modul Serial Number Management
+      HANYA untuk barang yang tiap unit fisiknya perlu histori individual.
+    - Kode yang sudah ada di-rename (bukan ditulis ulang dari nol): folder
+      `Modules/Imei/` → `Modules/SerialNumber/` (git mv, histori terjaga), exception
+      `ImeiAlreadyExistsException` → `DuplicateSerialUnitException` (constructor sekarang
+      terima `SerialIdentifierType $type` biar pesan errornya bisa "IMEI ... sudah
+      terdaftar" ATAU "Serial Number ... sudah terdaftar" tergantung tipe), enum baru
+      `Modules\SerialNumber\Enums\SerialIdentifierType` (`Imei` | `SerialNumber`), nav
+      Filament `ImeiManagementPage` → `SerialNumberPage` (label sidebar: "Serial Number").
+    - Skema database `imeis`/`imei_histories` → `serial_units`/`serial_unit_histories`
+      dengan kolom `identifier_type` + `identifier_value` (dulu cuma kolom `imei`). Detail
+      lengkap → `docs/04-database.md` § Serial unit lifecycle.
+    - Semua dokumen (`CLAUDE.md`, `docs/01` `02` `03` `04` `05` `06` `07`) sudah
+      disinkronkan mengikuti rename ini. `docs/08-tenancy.md` tidak menyebut IMEI sama
+      sekali, tidak perlu diubah.
+    - **Belum ditindaklanjuti**: `graphify-out/` belum di-`--update` lagi setelah rename
+      ini (IMEI masih jadi salah satu node sentral/god node di graph lama) — jalankan
+      `/graphify --update` kalau user minta graph disegarkan lagi.
+    - Nama produk "LEON PHONE" (brand) **TIDAK diubah** — ini keputusan sempit soal
+      modul IMEI/Serial Number saja, bukan rebrand. Kalau nanti user juga minta
+      generalisasi visi/nama produk dari "toko HP" ke "toko elektronik", itu perubahan
+      terpisah, jangan diasumsikan dari entri ini.
 
 ## Pending / belum diputuskan
 

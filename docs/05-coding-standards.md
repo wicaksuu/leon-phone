@@ -33,7 +33,7 @@ produksi.
   HTTP status yang sesuai (422 untuk validasi domain, 409 untuk conflict/stok, dst).
 
 ### Fail loud, fail early
-Validasi precondition di awal Action/Service (stok cukup? IMEI belum terjual? approval
+Validasi precondition di awal Action/Service (stok cukup? unit belum terjual? approval
 sudah ada?) sebelum menyentuh database. Jangan biarkan operasi jalan setengah lalu gagal di
 tengah — itu kenapa aturan #2 (transaction) wajib.
 
@@ -54,8 +54,8 @@ public function receive(PurchaseOrder $po, array $items): void
         foreach ($items as $item) {
             $this->stockService->increase($item->variant, $item->warehouse, $item->qty);
 
-            foreach ($item->imeis as $imei) {
-                $this->imeiService->markReceived($imei, $po, $item->warehouse); // lempar ImeiAlreadyExistsException kalau duplikat
+            foreach ($item->serialUnits as $unit) {
+                $this->serialUnitService->markReceived($unit, $po, $item->warehouse); // lempar DuplicateSerialUnitException kalau duplikat
             }
         }
 
@@ -86,13 +86,13 @@ opsional tambahan.
 ## 3. Konsistensi kode
 
 - **Actions** = satu operasi bisnis atomik, stateless, single `execute()`/`handle()` method.
-  Dipakai saat operasi dipanggil dari banyak tempat (mis. `CreateImeiHistoryAction` dipakai
-  dari Purchasing, Order, Return, Warranty).
+  Dipakai saat operasi dipanggil dari banyak tempat (mis. `CreateSerialUnitHistoryAction`
+  dipakai dari Purchasing, Order, Return, Warranty).
 - **Services** = orkestrasi beberapa Actions + transaction boundary. Ini yang dipanggil dari
   Controller/Livewire/Filament.
 - **DTOs** untuk data yang lewat antar layer (bukan `array` mentah, bukan `Request` object
   yang dipassing ke Service — Service tidak boleh tahu soal HTTP).
-- **Enums** (PHP native `enum`) untuk semua status (`OrderStatus`, `ImeiStatus`,
+- **Enums** (PHP native `enum`) untuk semua status (`OrderStatus`, `SerialIdentifierType`,
   `ApprovalStatus`, dll) — tidak ada magic string status di kode manapun.
 - **Policy** untuk semua otorisasi, termasuk approval workflow (`can('approve', $request)`).
 - Nama class/method Inggris, pesan yang tampil ke user (exception message, notification)
@@ -123,8 +123,8 @@ bukan test tenancy terpisah, tapi bagian dari Feature test yang sama.
 
 ### c. k6 (load/performance test)
 Target: aksi frekuensi tinggi atau yang rawan jadi bottleneck kalau banyak kasir/gudang
-pakai bersamaan — minimal: POS checkout, scan IMEI (Packing Station & Receive Barang),
-search produk/varian (autocomplete di POS), sinkronisasi marketplace. Kalau aksinya lewat
+pakai bersamaan — minimal: POS checkout, scan serial unit/IMEI (Packing Station & Receive
+Barang), search produk/varian (autocomplete di POS), sinkronisasi marketplace. Kalau aksinya lewat
 Livewire (bukan endpoint REST biasa), k6 tetap bisa hit HTTP endpoint yang dipanggil
 Livewire di baliknya (`livewire/update`) atau, kalau perlu lebih presisi, expose endpoint
 API tipis khusus untuk keperluan load test. Skrip k6 hidup di
