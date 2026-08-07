@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - Modules
+
+    # docs/05-coding-standards.md § Konsistensi kode — start strict since the
+    # codebase is brand new; loosening later is easy, tightening later on a
+    # grown codebase is not.
+    level: 5
