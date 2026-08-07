@@ -625,6 +625,11 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       channel waktu abis kalau extract semua fungsi di 143 file sekarang tanpa tahu mana
       yg benar2 dibutuhkan duluan.
 
+28. **Perubahan Template Utama ke Tailwind-Admin (Preline UI).** Mengikuti permintaan user, layout utama dan library styling yang sebelumnya menggunakan custom DaisyUI 5 (Nexus Dashboard) diganti dengan template **Tailwind-Admin** (`free-tailwind-admin-dashboard-template`). Konsekuensinya:
+    - Aset visual dan layout (sidebar & header) mengadopsi struktur template Tailwind-Admin (versi HTML Free).
+    - Pustaka komponen interaktif (seperti dropdown, modal, collapse) menggunakan **Preline UI 3.0** (vanilla JavaScript `preline.js`) yang berjalan di atas Tailwind CSS 4, menggantikan DaisyUI 5.
+    - Pustaka ini akan diintegrasikan ke dalam ekosistem aset Laravel saat proses inisialisasi dilakukan.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di

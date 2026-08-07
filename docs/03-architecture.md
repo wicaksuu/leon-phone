@@ -60,7 +60,7 @@ Livewire, API webhook marketplace).
 
 ## Pilihan Teknis: Blade Static vs Livewire Component
 
-Seluruh UI dibangun menggunakan **Tailwind CSS 4 + DaisyUI 5** dengan tata letak modular (Drawer-based layout terinspirasi dari [DaisyUI Nexus Dashboard Growth](https://nexus.daisyui.com/dashboards/growth)). Pemilihan teknologi halaman ditentukan berdasarkan interaktivitas:
+Seluruh UI dibangun menggunakan **Tailwind CSS 4 + Preline UI 3.0** dengan tata letak modular berbasis template [Tailwind-Admin](https://github.com/Tailwind-Admin/free-tailwind-admin-dashboard-template) (sidebar kiri collapsible + sticky top header). Pemilihan teknologi halaman ditentukan berdasarkan interaktivitas:
 
 | Kriteria | Blade View (Static/Simple) | Livewire Component |
 |---|---|---|

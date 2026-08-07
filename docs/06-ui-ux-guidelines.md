@@ -1,10 +1,10 @@
 # 06 — UI/UX Guidelines
 
-Tujuan: seluruh halaman sistem — baik halaman statis Blade, Livewire component biasa, maupun layar operasional interaktif (POS Kasir, Packing Station) — terasa sebagai **satu produk yang kohesif**, modern, premium, dan responsive di semua ukuran layar.
+Tujuan: seluruh halaman sistem — baik halaman statis Blade, Livewire component biasa, maupun layar operasional interaktif (POS Kasir, Packing Station) — terasa sebagai **satu produk yang kohesif**, modern, premium, dan responsive di semua ukuran layar dengan mengadopsi template **Tailwind-Admin**.
 
 ## Struktur Layout Utama (Dashboard & Admin Panel)
 
-Layout utama aplikasi mengadopsi pola **Drawer-based Sidebar + Top Header/Navbar** terinspirasi langsung dari [DaisyUI Nexus Dashboard Growth](https://nexus.daisyui.com/dashboards/growth).
+Layout utama aplikasi mengadopsi struktur tata letak dari [Tailwind-Admin](https://github.com/Tailwind-Admin/free-tailwind-admin-dashboard-template): **Sidebar Kiri Collapsible + Sticky Top Header**.
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -25,47 +25,43 @@ Layout utama aplikasi mengadopsi pola **Drawer-based Sidebar + Top Header/Navbar
 └──────────┴───────────────────────────────────────┘
 ```
 
-### 1. Drawer-based Sidebar (DaisyUI `drawer` & `menu`)
-- **Desktop (width >= 1024px)**: Sidebar selalu terbuka menggunakan class `.lg:drawer-open`. Sidebar berada di sisi kiri layar dengan lebar tetap (misalnya `w-64` atau `w-80`).
-- **Mobile/Tablet (width < 1024px)**: Sidebar tersembunyi secara default dan dapat dimunculkan sebagai drawer overlay saat pengguna menekan tombol menu (hamburger) pada header.
-- **Isi Sidebar**:
-  - Brand Logo & nama aplikasi di bagian atas.
-  - Navigasi utama terstruktur menggunakan DaisyUI `menu` component.
-  - Collapsible submenus (`details` / `summary` native tag dengan style DaisyUI) untuk mengelompokkan menu yang memiliki banyak submenu (seperti grup "Utiliti" atau "Master Data").
+### 1. Sidebar Kiri (Collapsible & Responsive)
+* **Desktop (width >= 1024px)**: Sidebar selalu terbuka di sisi kiri layar dengan lebar tetap (`w-64`). Dapat diciutkan/dikolaps menggunakan tombol toggle untuk memberikan ruang konten yang lebih luas.
+* **Mobile/Tablet (width < 1024px)**: Sidebar tersembunyi secara default dan dapat dimunculkan sebagai drawer overlay menggunakan kelas Preline UI `hs-overlay` ketika tombol hamburger di header ditekan.
+* **Isi Sidebar**:
+  * Brand Logo (Leon Phone) & nama aplikasi di bagian atas.
+  * Menu navigasi terstruktur yang dibagi menjadi grup modul (Persediaan, Pembelian, Penjualan, Keuangan, Akunting, Utiliti, dll.).
+  * Submenu yang bersifat collapsible menggunakan komponen Accordion/Collapse dari Preline UI.
 
-### 2. Top Header/Navbar (DaisyUI `navbar`)
-- Sisi atas konten (`.drawer-content`), dengan posisi sticky (`.sticky .top-0 .z-30`) dan background semi-transparan (`.bg-base-100/80 .backdrop-blur`).
-- **Isi Header**:
-  - Tombol toggle drawer (hamburger button) di pojok kiri (hanya muncul di mobile/tablet).
-  - Global Search bar (opsional, input statis).
-  - **Tenant Switcher (Dropdown)**: Dropdown pilihan PT aktif menggunakan DaisyUI `dropdown` component. Menampilkan nama PT dan kode (misalnya: `PT. ENAM JALAN DEWA ELEKTRONIK (01)`).
-  - **Notification Center**: Dropdown bell icon dengan indikator angka notifikasi belum dibaca.
-  - **Theme Controller**: Toggle / dropdown untuk berpindah tema (Light/Dark/System).
-  - **User Profile Menu**: Dropdown avatar yang berisi link profil, pengaturan password, dan tombol Logout.
+### 2. Sticky Top Header
+* Posisinya tetap di atas (`sticky top-0 z-40`) dengan efek background blur (`backdrop-blur-md bg-white/80 dark:bg-neutral-900/80`) dan border bawah yang tipis.
+* **Isi Header**:
+  * Tombol hamburger (hanya muncul di mobile/tablet) untuk membuka drawer sidebar.
+  * Kolom Pencarian Global (Global Search).
+  * **Tenant Switcher (Dropdown)**: Dropdown pilihan PT aktif menggunakan komponen dropdown Preline UI (`hs-dropdown`). Menampilkan nama PT dan kode (misalnya: `PT. ENAM JALAN DEWA ELEKTRONIK (01)`).
+  * **Notification Center**: Dropdown dengan ikon lonceng dan badge penanda notifikasi baru.
+  * **Theme Switcher**: Tombol toggle untuk berpindah mode Light, Dark, dan System. Mode gelap disinkronkan dengan menambahkan/menghapus kelas `.dark` pada elemen root `<html>`.
+  * **User Profile Menu**: Dropdown foto profil/avatar yang berisi informasi akun pengguna, link ke pengaturan password, dan tombol Logout.
 
-### 3. Main Content Area (`.drawer-content` / `.p-6`)
-- Content wrapper memiliki padding yang cukup (`p-4 md:p-6 lg:p-8`) untuk memberikan whitespace premium.
-- Layout halaman dashboard menggunakan CSS Grid (`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6`) untuk menyusun statistik secara responsive.
+### 3. Area Konten Utama (Main Content)
+* Pembungkus konten memiliki whitespace premium (`p-4 sm:p-6 space-y-6`).
+* Tata letak grid digunakan untuk menyusun kartu informasi statistik (`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6`).
 
 ---
 
 ## Referensi Struktur Konten (bukan gaya visual)
 
-Screenshot produk sejenis (SISCOM ERP) di folder `ref-gambar/` dijadikan acuan untuk **komposisi dan kelengkapan konten** di setiap menu, bukan untuk ditiru gaya visualnya (ERP klasik). Tampilan visual kita harus modern, lapang, dan bersih.
+Screenshot produk sejenis (SISCOM ERP) di folder `ref-gambar/` dijadikan acuan untuk **komposisi dan kelengkapan konten** di setiap menu, bukan untuk ditiru gaya visualnya (ERP klasik). Tampilan visual kita harus modern, lapang, dan bersih mengikuti desain bawaan Tailwind-Admin.
 
 ---
 
 ## Prinsip Visual & Theming
 
-1. **DaisyUI Semantic Color Tokens**: Hindari menaruh warna hard-coded (seperti `bg-blue-600` atau `text-red-500`) secara langsung untuk komponen UI utama. Gunakan utility warna DaisyUI yang dinamis:
-   - Warna Utama: `bg-primary`, `text-primary-content`
-   - Warna Latar: `bg-base-100` (halaman utama), `bg-base-200` (sidebar/background utama), `bg-base-300` (card/hover element)
-   - Status Semantik: `alert-success`, `alert-warning`, `alert-error`, `alert-info`
-2. **Premium Whitespace**: Whitespace (ruang kosong) adalah elemen desain kelas satu. Gunakan padding (`p-6`) dan gap (`gap-6`) yang memadai untuk memisahkan data-heavy elements agar tidak terkesan bertumpuk dan sesak.
-3. **Responsive Dark Mode**: Dark mode didukung secara bawaan melalui framework DaisyUI. Pengaturan tema dilakukan dengan memasang atribut `data-theme` pada root tag `<html>` (misal: `data-theme="light"` atau `data-theme="dark"`).
-4. **Density Sesuai Konteks**:
-   - Layar Back-Office (CRUD, Akuntansi, Report): Density sedang, tabel menggunakan styling compact (`table-sm` atau `table-xs`) agar data terlihat dalam jumlah banyak tanpa scroll berlebih.
-   - Layar Operasional (POS Kasir, Packing Station): Density lapang, input dan target sentuh berukuran besar (`btn-lg`, `input-lg`) karena sering diakses melalui tablet/layar sentuh.
+1. **Standardisasi Tailwind CSS 4**: Gunakan token warna bawaan dari Tailwind CSS 4. Palet warna didominasi oleh Slate/Neutral untuk latar belakang dan teks, dengan warna Indigo/Blue sebagai warna aksen utama (Primary).
+2. **Penggunaan Mode Gelap (Dark Mode)**: Mode gelap didukung penuh menggunakan utilitas kelas `dark:` di Tailwind. Latar belakang kontainer bertransisi menjadi warna gelap (misalnya `dark:bg-neutral-900` atau `dark:bg-neutral-800`), dan teks menjadi putih keabu-abuan.
+3. **Kepadatan Informasi (Density)**:
+   * **Halaman CRUD & Back-Office (Akuntansi, Pembelian, dll.)**: Kepadatan sedang hingga tinggi. Tabel menggunakan padding kecil agar informasi baris data muat lebih banyak dalam satu layar.
+   * **Layar Operasional (POS Kasir, Packing Station)**: Kepadatan rendah dengan elemen antarmuka yang besar (tombol besar, input besar) untuk memudahkan penekanan pada perangkat tablet atau layar sentuh.
 
 ---
 
@@ -73,36 +69,36 @@ Screenshot produk sejenis (SISCOM ERP) di folder `ref-gambar/` dijadikan acuan u
 
 | Breakpoint | Konteks Pemakaian | Target Responsivitas |
 |---|---|---|
-| Mobile (< 640px) | Staf gudang cek stok / scan via HP | Sidebar terlipat. Tabel dikonversi menjadi layout card-list. Tombol aksi berada di posisi yang mudah dijangkau satu tangan. |
-| Tablet (640–1024px) | POS Kasir, Packing Station | Layout dashboard flex-col/grid menyesuaikan layar medium. Lebar layout kasir tetap optimal untuk mode landscape. |
-| Desktop (> 1024px) | Admin, owner, back-office | Sidebar terbuka (`lg:drawer-open`). Grid card statistik terbentang penuh (grid-cols-4). |
+| Mobile (< 640px) | Staf gudang cek stok / scan via HP | Sidebar tersembunyi. Tabel lebar diubah menjadi daftar kartu (card list). Target klik berukuran minimal 44x44px. |
+| Tablet (640–1024px) | POS Kasir, Packing Station | Sidebar tersembunyi. Grid kasir tersusun optimal dalam orientasi lanskap. |
+| Desktop (> 1024px) | Admin, owner, back-office | Sidebar terbuka secara default. Konten melebar penuh dengan visual grid dashboard yang komprehensif. |
 
 ---
 
 ## Interaksi Khusus Layar Operasional (POS Kasir & Packing Station)
 
-- **Scan-first**: Input barcode/IMEI/Serial Number selalu difokuskan secara otomatis (`autofocus` + JavaScript refokus setelah interaksi).
-- **Feedback Instan**: Gunakan notifikasi DaisyUI `toast` dengan alert semantik (hijau sukses, merah gagal) yang melayang di pojok kanan bawah. Feedback harus muncul kurang dari 200ms setelah input ter-trigger.
-- **Keyboard Shortcuts**: Kasir dapat menyelesaikan transaksi menggunakan shortcut keyboard (misal: F8 untuk pembayaran, F9 untuk cetak) tanpa memegang mouse.
+* **Scan-first**: Input barcode/IMEI/Serial Number selalu difokuskan secara otomatis (`autofocus` + JavaScript refokus setelah interaksi).
+* **Feedback Instan**: Gunakan notifikasi melayang (Toast) di pojok kanan bawah yang digerakkan oleh Livewire/JavaScript dengan transisi mulus dan indikator semantik (sukses = hijau, error = merah).
+* **Keyboard Shortcuts**: Kasir dapat menyelesaikan transaksi menggunakan shortcut keyboard (misal: F8 untuk pembayaran, F9 untuk cetak) tanpa memegang mouse.
 
 ---
 
-## Komponen Bersama (DaisyUI UI Kit)
+## Komponen Bersama (Preline UI Kit)
 
-Kita memaksimalkan penggunaan komponen bawaan DaisyUI 5 untuk menjaga konsistensi:
-- **Button**: `.btn .btn-primary` (utama), `.btn .btn-outline` (sekunder), `.btn .btn-error` (batal/hapus).
-- **Badge**: `.badge .badge-success` (aktif/selesai), `.badge .badge-warning` (pending).
-- **Card**: `.card .bg-base-100 .shadow-xl` untuk kontainer konten atau grafik.
-- **Table**: `.table .table-zebra` untuk listing data.
-- **Modal**: `.modal` yang dipadukan dengan Javascript/Livewire untuk form dialog interaktif.
-- **Notification/Toast**: `.toast` berisi `.alert` untuk pesan alert dinamis.
+Kita memaksimalkan penggunaan komponen bawaan **Preline UI** untuk menjaga konsistensi:
+* **Buttons**: Tombol menggunakan utility class Tailwind standar dengan padding yang pas dan radius medium (misalnya `py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none`).
+* **Badges**: Label status menggunakan badge kecil dengan sudut membulat penuh (`inline-flex items-center gap-x-1.5 py-0.5 px-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-500`).
+* **Cards**: Kontainer info bertipe borderless atau border tipis dengan shadow tipis (`flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70`).
+* **Tables**: Zebra stripe table minimalis (`min-w-full divide-y divide-gray-200 dark:divide-neutral-700`).
+* **Modals**: Komponen modal responsif dari Preline UI yang menyertakan atribut `data-hs-overlay` untuk pembukaan dan penutupan yang mulus.
+* **Dropdowns**: Dropdown menu menggunakan kelas `hs-dropdown` untuk penanganan posisi dan interaksi klik di luar elemen secara otomatis.
 
 ---
 
 ## Checklist Kelayakan Layar Baru
 
-- [ ] Diuji dan tidak overflow di 3 breakpoint (mobile/tablet/desktop).
-- [ ] Tampilan kontras dan tidak pecah saat berganti tema Light/Dark.
-- [ ] Memiliki visual state yang jelas untuk: Loading (`loading` spinner), Empty State, dan Error State.
-- [ ] Tombol aksi di mobile/tablet memiliki area klik yang cukup (minimal 44x44px).
-- [ ] Konsisten menggunakan semantic color tokens (hijau = success, merah = error).
+* [ ] Diuji dan tidak overflow di 3 breakpoint (mobile/tablet/desktop).
+* [ ] Tampilan kontras dan tidak pecah saat berganti tema Light/Dark.
+* [ ] Memiliki visual state yang jelas untuk: Loading (spinner/skeleton), Empty State, dan Error State.
+* [ ] Tombol aksi di mobile/tablet memiliki area klik yang cukup (minimal 44x44px).
+* [ ] Konsisten menggunakan warna semantik (hijau = success, merah = error).

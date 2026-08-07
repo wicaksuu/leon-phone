@@ -1,0 +1,67 @@
+{
+  "CLAUDE.md": {
+    "mtime": 1786099268.7338395,
+    "ast_hash": "01e20b4eebf66b683a2a100b69bd97bf",
+    "semantic_hash": "01e20b4eebf66b683a2a100b69bd97bf"
+  },
+  "docs/01-vision.md": {
+    "mtime": 1786098205.3951144,
+    "ast_hash": "e0d422a605617ef23338574bcaf88156",
+    "semantic_hash": "e0d422a605617ef23338574bcaf88156"
+  },
+  "docs/02-modules.md": {
+    "mtime": 1786098285.7047367,
+    "ast_hash": "9b6a6234d4df4f916bfd5bdfffd53d0c",
+    "semantic_hash": "9b6a6234d4df4f916bfd5bdfffd53d0c"
+  },
+  "docs/03-architecture.md": {
+    "mtime": 1786099260.1346726,
+    "ast_hash": "07b75620ecbe3444113a32a514ade45b",
+    "semantic_hash": "07b75620ecbe3444113a32a514ade45b"
+  },
+  "docs/04-database.md": {
+    "mtime": 1786098428.1348808,
+    "ast_hash": "6d8d1467eb0c45455a9fef4da1dac6ad",
+    "semantic_hash": "6d8d1467eb0c45455a9fef4da1dac6ad"
+  },
+  "docs/05-coding-standards.md": {
+    "mtime": 1786098983.7917264,
+    "ast_hash": "2efe35848bea28492595cf531f447024",
+    "semantic_hash": "2efe35848bea28492595cf531f447024"
+  },
+  "docs/06-ui-ux-guidelines.md": {
+    "mtime": 1786099019.0111592,
+    "ast_hash": "ed4e93ec206812796d9bef0e34d52ffd",
+    "semantic_hash": "ed4e93ec206812796d9bef0e34d52ffd"
+  },
+  "docs/07-roadmap.md": {
+    "mtime": 1786099054.7021835,
+    "ast_hash": "bc6221541e53a129587f355c5243db20",
+    "semantic_hash": "bc6221541e53a129587f355c5243db20"
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1786096417.645305,
+    "ast_hash": "e0cc3a7a522e8c4ec788e7ea98362d13",
+    "semantic_hash": "e0cc3a7a522e8c4ec788e7ea98362d13"
+  },
+  "docs/00-status.md": {
+    "mtime": 1786099243.6065688,
+    "ast_hash": "2f80337ddc51c9a749b71871e313d845",
+    "semantic_hash": "2f80337ddc51c9a749b71871e313d845"
+  },
+  "docs/08-tenancy.md": {
+    "mtime": 1786099113.4513755,
+    "ast_hash": "0717cb152ad60e2a63f5c306dbf2c2b4",
+    "semantic_hash": "0717cb152ad60e2a63f5c306dbf2c2b4"
+  },
+  "ref-gambar/WhatsApp Image 2026-08-07 at 16.43.08.jpeg": {
+    "mtime": 1786096482.463146,
+    "ast_hash": "9b967f6cf20d72e1677fd8ab208b3b91",
+    "semantic_hash": "9b967f6cf20d72e1677fd8ab208b3b91"
+  },
+  "ref-gambar/WhatsApp Image 2026-08-07 at 16.47.07.jpeg": {
+    "mtime": 1786096478.37652,
+    "ast_hash": "3fd2eca6fc487f7204d0509d76dce134",
+    "semantic_hash": "3fd2eca6fc487f7204d0509d76dce134"
+  }
+}

@@ -41,8 +41,8 @@ Gudang). Lihat `docs/04-database.md`.
 | Database | **MySQL 8.0** (bukan MariaDB — dibalik saat instalasi, lihat `docs/00-status.md` #14) | Sudah jalan lokal di mesin dev user, alasan praktis, driver Laravel sama (`mysql`) |
 | Multi-tenancy | **Shared DB + `tenant_id`**, via custom session-based middleware | Menyimpan context tenant aktif di session (`session('tenant_id')`) dan di-resolve oleh middleware `ResolveTenantContext` menjadi singleton `TenantContext` |
 | Autentikasi | **Laravel Breeze** (Blade stack) | Starter kit resmi, ringan, sudah menyertakan Tailwind CSS, view/controller dapat dicustom penuh |
-| Layout Utama | **Drawer-based layout custom** (DaisyUI `drawer` + `navbar`) | Mengikuti referensi [DaisyUI Nexus Dashboard Growth](https://nexus.daisyui.com/dashboards/growth): drawer-based sidebar di kiri + sticky top header/navbar di kanan atas |
-| Frontend styling | **Tailwind CSS 4 + DaisyUI 5** | DaisyUI menyediakan class component siap pakai + semantic color tokens + theming built-in, terintegrasi penuh dalam satu pipeline aset Tailwind |
+| Layout Utama | **Tailwind-Admin sidebar-based layout** | Mengikuti template [Tailwind-Admin](https://github.com/Tailwind-Admin/free-tailwind-admin-dashboard-template): sidebar kiri collapsible + sticky top header di kanan atas |
+| Frontend styling | **Tailwind CSS 4 + Preline UI** | Preline UI menyediakan pustaka komponen siap pakai yang terintegrasi dengan Tailwind CSS 4 + vanilla JS plugin (`preline.js`) untuk interaksi UI modern/responsif |
 
 Detail lengkap tiap keputusan → `docs/03-architecture.md`.
 

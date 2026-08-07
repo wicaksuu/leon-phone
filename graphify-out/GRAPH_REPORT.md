@@ -1,122 +1,127 @@
-# Graph Report - .  (2026-08-07)
+# Graph Report - .  (2026-08-08)
 
 ## Corpus Check
-- 13 files · ~18,095 words
+- 17 files · ~25,082 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 131 nodes · 147 edges · 18 communities (10 shown, 8 thin omitted)
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.8)
-- Token cost: 177,317 input · 0 output
+- 122 nodes · 107 edges · 22 communities (12 shown, 10 thin omitted)
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 8 edges (avg confidence: 0.84)
+- Token cost: 1,200 input · 500 output
 
 ## Community Hubs (Navigation)
-- Referensi SISCOM: Dashboard Layout
+- Field per halaman (SEMUA yang berhasil diverifikasi)
 - Pivot Frontend & Omnichannel Modules
 - Akuntansi & Data Model Append-only
-- Tenancy Enforcement & Observability Stack
-- Vision Pivot: Multi-tenant SaaS
-- Error Handling & Transaction Rules
-- Referensi SISCOM: Tenant Picker Screen
-- Hierarki PT-Cabang-Gudang
-- Roles, HR & Platform Admin
-- Purnajual Modules
+- Decision #13: Pulse + Telescope + Reverb dipakai, Octane Ditunda
+- SISCOM ERP Reference Product
+- DB Transaction & Rollback Rule
+- Business Logic — Extracted vs Predicted
+- Tenancy Data Model (tenants, tenant_user, branches, warehouses)
+- Platform Admin (SaaS-level, Outside Tenant Context)
+- Module: IMEI Management
 - Modular per Domain Rule
-- Laravel Versi Terbaru
-- Dashboard Module
+- Decision #7: Laravel Versi Terbaru
+- Module: Dashboard
 - Queue & Job Architecture
-- Stock Items Table
-- Code Consistency Convention
-- UI Checklist Selesai
-- Shared UI Components
+- stock_items Table
+- Code Consistency (Actions/Services/DTOs/Enums/Policy)
+- Checklist Selesai untuk Layar Baru
+- Shared Blade/Livewire Component Set
+- Gap Analysis — SISCOM vs Desain Kita
+- Form "Edit" (Ubah Data) — Field Inventory
+- Field Inventory — Lengkap per Halaman
+- SISCOM ERP — Audit Reference (untuk AI coding agent)
 
 ## God Nodes (most connected - your core abstractions)
-1. `SISCOM ERP Retail ERP Dashboard Screenshot` - 25 edges
-2. `Utiliti (Utilities) menu item, expanded showing submenu` - 10 edges
-3. `Module: Akuntansi` - 8 edges
-4. `Decision #12: Balik Full Filament + Livewire (Dibalik dari #6)` - 6 edges
-5. `Module: POS Kasir` - 6 edges
-6. `Decision #13: Pulse + Telescope + Reverb dipakai, Octane Ditunda` - 5 edges
-7. `Module: Packing Station` - 5 edges
-8. `Kapan Filament, Kapan Livewire Custom` - 5 edges
-9. `imeis Table` - 5 edges
-10. `Testing Trio: Unit + Feature/Integration + k6` - 5 edges
+1. `Business Logic — Extracted vs Predicted` - 11 edges
+2. `Gap Analysis — SISCOM vs Desain Kita` - 10 edges
+3. `Field Inventory — Lengkap per Halaman` - 9 edges
+4. `Form "Edit" (Ubah Data) — Field Inventory` - 8 edges
+5. `Field per halaman (SEMUA yang berhasil diverifikasi)` - 7 edges
+6. `Form "Tambah" (Create) — Field Inventory` - 6 edges
+7. `Module: Akuntansi` - 5 edges
+8. `Module: IMEI Management` - 4 edges
+9. `imeis Table` - 4 edges
+10. `Append-only Histori Principle` - 4 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Akuntansi (Accounting) menu item` --references--> `Module: Akuntansi`  [INFERRED]
-  ref-gambar/WhatsApp Image 2026-08-07 at 16.43.08.jpeg → docs/02-modules.md
-- `Decision #11: graphify Sudah Dijalankan Sekali (Usang Sebagian)` --conceptually_related_to--> `LEON PHONE — Retail Management System`  [INFERRED]
+- `Guiding Design Principles (Data Truth, IMEI Truth, Unified Order, Auditability)` --semantically_similar_to--> `Append-only Histori Principle`  [INFERRED] [semantically similar]
+  docs/01-vision.md → docs/04-database.md
+- `Append-only Histori Principle` --semantically_similar_to--> `Exception per Domain (No Generic Exceptions)`  [INFERRED] [semantically similar]
+  docs/04-database.md → docs/05-coding-standards.md
+- `Decision #28: Perubahan Template Utama ke Tailwind-Admin (Preline UI)` --references--> `Tech Stack Decision (Laravel + MySQL + Tailwind 4 + Preline UI)`  [EXTRACTED]
   docs/00-status.md → CLAUDE.md
-- `Filament+React 2-Agent Split (Reverted Same Day)` --references--> `Decision #12: Balik Full Filament + Livewire (Dibalik dari #6)`  [EXTRACTED]
-  CLAUDE.md → docs/00-status.md
-- `Exception per Domain (No Generic Exceptions)` --conceptually_related_to--> `Consistent Error Handling Rule`  [INFERRED]
-  docs/05-coding-standards.md → CLAUDE.md
-- `IMEI as First-Class Entity` --references--> `imeis Table`  [EXTRACTED]
-  CLAUDE.md → docs/04-database.md
+- `Komponen Bersama (Preline UI Kit)` --conceptually_related_to--> `Tech Stack Decision (Laravel + MySQL + Tailwind 4 + Preline UI)`  [EXTRACTED]
+  docs/06-ui-ux-guidelines.md → CLAUDE.md
+- `Struktur Layout Utama (Sidebar & Header)` --conceptually_related_to--> `Tech Stack Decision (Laravel + MySQL + Tailwind 4 + Preline UI)`  [EXTRACTED]
+  docs/06-ui-ux-guidelines.md → CLAUDE.md
 
 ## Hyperedges (group relationships)
 - **Tenant Isolation Enforcement Mechanism** — docs_08_tenancy_belongs_to_tenant_trait, docs_08_tenancy_context_resolution, docs_04_database_general_conventions, docs_03_architecture_octane [INFERRED 0.85]
 - **Mandatory Testing Trio Policy** — docs_05_coding_standards_testing_trio, docs_07_roadmap_fase1, docs_08_tenancy_testing_wajib, docs_00_status_testing_trio_decision [EXTRACTED 0.90]
-- **Frontend Architecture Pivot (Filament/React Split Reverted)** — docs_00_status_filament_react_split_decision, docs_00_status_full_filament_reversal_decision, docs_03_architecture_filament_vs_livewire, claude_filament_react_split_reverted [EXTRACTED 0.90]
 
-## Communities (18 total, 8 thin omitted)
+## Communities (22 total, 10 thin omitted)
 
-### Community 0 - "Referensi SISCOM: Dashboard Layout"
-Cohesion: 0.11
-Nodes (26): Aktivitas Terakhir Anda widget (recent user activity feed/audit log), Akuntansi (Accounting) menu item, Best Seller donut chart widget (top 5 products by quantity), Buka Kunci Data (Unlock Data) submenu item, Dashboard menu item (sidebar, active), SISCOM ERP Retail ERP Dashboard Screenshot, Financial summary cards (Penjualan, Piutang Dagang Outstanding, Pembelian, Hutang Dagang Outstanding) with date-range filter, Ganti Periode (Change Period) submenu item (+18 more)
+### Community 0 - "Field per halaman (SEMUA yang berhasil diverifikasi)"
+Cohesion: 0.15
+Nodes (12): Akunting, Cara URL "Tambah" ditemukan, Edit form, Field per halaman (SEMUA yang berhasil diverifikasi), Form "Tambah" (Create) — Field Inventory, Halaman dikonfirmasi TIDAK punya form Tambah, Halaman "murni FORM AKSI" (bukan listing+tambah — TIDAK relevan pola ini), Keuangan (+4 more)
 
 ### Community 1 - "Pivot Frontend & Omnichannel Modules"
-Cohesion: 0.17
-Nodes (16): Filament+React 2-Agent Split (Reverted Same Day), Tech Stack Decision (Laravel + MariaDB + Filament + Livewire), Decision #6: Filament (Admin) + React/API (Operasional) 2-Agent Split, Decision #12: Balik Full Filament + Livewire (Dibalik dari #6), Decision #2: Database MariaDB, Module: Marketplace, Marketplace Engine, Module: Order Management (+8 more)
+Cohesion: 0.21
+Nodes (12): Guiding Design Principles (Data Truth, IMEI Truth, Unified Order, Auditability), Module: Akuntansi, Cross-cutting Feature: Approval Workflow, Cross-cutting Feature: Audit Log, Module: Finance, Module: Report, Akuntansi Tables (chart_of_accounts, journal_entries, journal_lines, accounting_periods, opening_balances), Append-only Histori Principle (+4 more)
 
 ### Community 2 - "Akuntansi & Data Model Append-only"
-Cohesion: 0.16
-Nodes (16): IMEI as First-Class Entity, Guiding Design Principles (Data Truth, IMEI Truth, Unified Order, Auditability), Module: Akuntansi, Cross-cutting Feature: Approval Workflow, Cross-cutting Feature: Audit Log, Module: Finance, Module: Report, Modules/* Folder Structure Convention (+8 more)
+Cohesion: 0.18
+Nodes (12): Module: CRM, Module: Garansi (Warranty), Module: IMEI Management, Module: Master Data, Module: Return, Module: Service, imei_histories Table (Append-only), imeis Table (+4 more)
 
-### Community 3 - "Tenancy Enforcement & Observability Stack"
-Cohesion: 0.16
-Nodes (15): Pending Decisions (PHP version, hosting, marketplace priority, payment gateway, thermal printer), Mandatory Tenant Scoping Rule, Mandatory Testing Trio Rule, Decision #13: Pulse + Telescope + Reverb dipakai, Octane Ditunda, Decision #8: Testing Wajib Trio Unit+Feature+k6, Laravel Octane (Deferred — TenantContext Risk), Laravel Pulse (Production Monitoring), Laravel Reverb (WebSocket / Realtime) (+7 more)
+### Community 3 - "Decision #13: Pulse + Telescope + Reverb dipakai, Octane Ditunda"
+Cohesion: 0.17
+Nodes (11): Aktiva Tetap (Fixed Assets) — **PREDICTED, bukan extracted**, Akuntansi (Jurnal) — `cek()` (EXTRACTED, `siscom_addJournal.html`), Belum ditelusuri (masih banyak fungsi JS lain per halaman yang belum dibaca), Business Logic — Extracted vs Predicted, Pembelian (PI/Faktur Pembelian, edit) — `cekStdHargaBeli` (EXTRACTED, `siscom_edit_pi.html`), Pembelian (Retur/PR) — `cekMinimalQty` (EXTRACTED, `siscom_addPr.html`), Pembelian (RO/Receive) & Persediaan (Adjustment) — `cekDoubleImei` (EXTRACTED), Penjualan (DO/Delivery Order) — `cekStokGudang` & `overHariLimit` (EXTRACTED, `siscom_addDo.html`) (+3 more)
 
-### Community 4 - "Vision Pivot: Multi-tenant SaaS"
-Cohesion: 0.14
-Nodes (15): LEON PHONE — Retail Management System, Multi-tenant SaaS Architecture, Dashboard Screenshot (WhatsApp Image 2026-08-07 16.43.08), Pilih PT Screenshot (WhatsApp Image 2026-08-07 16.47.07), Shared Database + tenant_id Isolation, SISCOM ERP Reference Product, Modern/Premium/Responsive UI Rule, Decision #5: Modul Akuntansi Ditambahkan (+7 more)
+### Community 4 - "SISCOM ERP Reference Product"
+Cohesion: 0.18
+Nodes (10): 1. Master Data & Inventory (docs/02-modules.md §2-3, §04-database.md), 2. Serial Number Management (docs/02-modules.md §4), 3. Purchasing (docs/02-modules.md §13), 4. Sales / Order Management / POS (docs/02-modules.md §6-7), 5. Finance (docs/02-modules.md §14), 6. Akuntansi (docs/02-modules.md §18) — **gap paling besar**, 7. Multi-Cabang / Organisasi (docs/08-tenancy.md), 8. Audit Log (docs/04-database.md § audit_logs) (+2 more)
 
-### Community 5 - "Error Handling & Transaction Rules"
-Cohesion: 0.25
-Nodes (8): Consistent Error Handling Rule, Decision #9: Error Handling & DB Rollback Prioritas Eksplisit, Module: Inventory, Module: Purchasing, Error Handling & Transaction Design (Service Layer), DB Transaction & Rollback Rule, Exception per Domain (No Generic Exceptions), Fase 2 — Operasional Inti
+### Community 5 - "DB Transaction & Rollback Rule"
+Cohesion: 0.18
+Nodes (10): Baru dari putaran kedua (submit form filter/cari), Belum tertelusuri (arsitektur AJAX beda, bukan soal data kosong), Cara URL Edit ditemukan (metode BEDA dari form Tambah), Dari putaran pertama (URL edit statis/server-rendered), Error / gagal, Field per halaman (21 yang berhasil diverifikasi, via URL edit REAL), Form "Edit" (Ubah Data) — Field Inventory, Metode lanjutan (setelah user konfirmasi submit form filter/cari diizinkan) (+2 more)
 
-### Community 6 - "Referensi SISCOM: Tenant Picker Screen"
-Cohesion: 0.25
-Nodes (8): Per-company database card UI pattern: logo, company name, PT legal name, industry tag, user count, branch count, "Login Database" button, register/subscription status badge, Database/tenant picker screen pattern: after login, user picks which PT (company database) to enter, Card: "enamjalan" / PT. Enam Jalan Dewa Elektronik, Retail, 5 users, 1 branch, REGISTER: EXPIRED 09/12/2026, Card: "leon" / Leon Sellular Indonesia, Retail, 9 users, 1 branch, REGISTER: EXPIRED 09/12/2026, Inference: "Leon Sellular Indonesia" card plausibly represents the real client whose retail operation this project (SAAS POS LEON PHONE) targets, currently running on SISCOM ERP, SISCOM ERP (competitor retail ERP platform, myapp.siscom.id), Subscription/register status badge on card (e.g. "REGISTER: EXPIRED 09/12/2026", shown in green), SISCOM ERP "Database" picker screen (post-login, choose PT) screenshot
+### Community 6 - "Business Logic — Extracted vs Predicted"
+Cohesion: 0.20
+Nodes (10): Module: Inventory, Module: Marketplace, Marketplace Engine, Module: Order Management, Module: Packing Station, Module: POS Kasir, Module: Purchasing, DB Transaction & Rollback Rule (+2 more)
 
-### Community 7 - "Hierarki PT-Cabang-Gudang"
-Cohesion: 0.29
-Nodes (7): PT → Cabang → Gudang Hierarchy, Decision #4: Hierarki Lokasi PT → Cabang → Gudang, Decision #1: RMS, bukan sekadar POS, RMS, bukan POS, Module: Master Data, Tenancy & Lokasi Tables (tenants, tenant_user, branches, warehouses), Tenancy Data Model (tenants, tenant_user, branches, warehouses)
+### Community 7 - "Tenancy Data Model (tenants, tenant_user, branches, warehouses)"
+Cohesion: 0.20
+Nodes (9): Akunting (Accounting), Field Inventory — Lengkap per Halaman, Help / Tools (diagnostic, prioritas rendah), Keuangan (Finance), Pembelian (Purchasing), Penjualan (Sales), Persediaan (Inventory), Saldo Awal (+1 more)
 
-### Community 8 - "Roles, HR & Platform Admin"
+### Community 8 - "Platform Admin (SaaS-level, Outside Tenant Context)"
 Cohesion: 0.33
 Nodes (6): User Personas (Kasir, Admin Gudang, Purchasing, CS, Teknisi, Owner, Akuntan, Platform Admin), Module: HR, Module: Setting / User, Belum Masuk Fase Manapun (Mobile App, Multi-marketplace Lanjutan, Platform Admin), Platform Admin (SaaS-level, Outside Tenant Context), Role & Permission per Tenant
 
-### Community 9 - "Purnajual Modules"
-Cohesion: 0.40
-Nodes (6): Module: CRM, Module: Garansi (Warranty), Module: IMEI Management, Module: Return, Module: Service, Fase 4 — Purnajual
+### Community 9 - "Module: IMEI Management"
+Cohesion: 0.33
+Nodes (6): General DB Conventions (InnoDB, utf8mb4, tenant_id, naming), Testing Trio: Unit + Feature/Integration + k6, Fase 1 — Fondasi, BelongsToTenant Trait + Global Scope, Tenant Context Resolution (ResolveTenantContext, TenantContext singleton), Testing Wajib untuk Tenancy (Cross-tenant Isolation)
+
+### Community 10 - "Modular per Domain Rule"
+Cohesion: 0.67
+Nodes (4): Tech Stack Decision (Laravel + MySQL + Tailwind 4 + Preline UI), Decision #28: Perubahan Template Utama ke Tailwind-Admin (Preline UI), Komponen Bersama (Preline UI Kit), Struktur Layout Utama (Sidebar & Header)
+
+### Community 11 - "Decision #7: Laravel Versi Terbaru"
+Cohesion: 0.67
+Nodes (3): Multi-tenant SaaS Vision (Current), Single-tenant Vision (Superseded), Kenapa Bukan Database Terpisah per PT
 
 ## Knowledge Gaps
-- **36 isolated node(s):** `Multi-tenant SaaS Architecture`, `Pending Decisions (PHP version, hosting, marketplace priority, payment gateway, thermal printer)`, `Pilih PT Screenshot (WhatsApp Image 2026-08-07 16.47.07)`, `RMS, bukan POS`, `User Personas (Kasir, Admin Gudang, Purchasing, CS, Teknisi, Owner, Akuntan, Platform Admin)` (+31 more)
+- **67 isolated node(s):** `Cara pakai dokumen ini`, `Persediaan (Inventory)`, `Pembelian (Purchasing)`, `Penjualan (Sales)`, `Keuangan (Finance)` (+62 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Module: Akuntansi` connect `Akuntansi & Data Model Append-only` to `Referensi SISCOM: Dashboard Layout`, `Vision Pivot: Multi-tenant SaaS`?**
-  _High betweenness centrality (0.405) - this node is a cross-community bridge._
-- **Why does `imeis Table` connect `Akuntansi & Data Model Append-only` to `Purnajual Modules`, `Hierarki PT-Cabang-Gudang`?**
-  _High betweenness centrality (0.347) - this node is a cross-community bridge._
-- **Why does `Module: IMEI Management` connect `Purnajual Modules` to `Pivot Frontend & Omnichannel Modules`, `Akuntansi & Data Model Append-only`?**
-  _High betweenness centrality (0.305) - this node is a cross-community bridge._
-- **What connects `Multi-tenant SaaS Architecture`, `Pending Decisions (PHP version, hosting, marketplace priority, payment gateway, thermal printer)`, `Pilih PT Screenshot (WhatsApp Image 2026-08-07 16.47.07)` to the rest of the system?**
-  _36 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Referensi SISCOM: Dashboard Layout` be split into smaller, more focused modules?**
-  _Cohesion score 0.11384615384615385 - nodes in this community are weakly interconnected._
-- **Should `Vision Pivot: Multi-tenant SaaS` be split into smaller, more focused modules?**
-  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
+- **Why does `Module: IMEI Management` connect `Community 2` to `Community 6`?**
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `Append-only Histori Principle` connect `Community 1` to `Community 2`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **What connects `Cara pakai dokumen ini`, `Persediaan (Inventory)`, `Pembelian (Purchasing)` to the rest of the system?**
+  _67 weakly-connected nodes found - possible documentation gaps or missing edges._
