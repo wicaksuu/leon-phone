@@ -7,16 +7,54 @@
 
 ## Status saat ini
 
-**Fase: BLUEPRINT.** Belum ada satu baris kode pun. Yang ada baru dokumen arah & struktur
-di `CLAUDE.md` + `docs/*`. Instalasi Laravel belum dimulai — user sengaja minta
-"jangan langsung bikin" supaya arah & strukturnya matang dulu.
+**Fase: 1 (Fondasi) — SEDANG BERJALAN.** Blueprint (`CLAUDE.md` + `docs/*`) sudah matang,
+dan user sudah minta mulai coding ("bikin base laravel nya dulu yang lengkap"). Repo:
+[github.com/wicaksuu/leon-phone](https://github.com/wicaksuu/leon-phone) (branch `main`).
 
-**Sedang berlangsung**: user mengumpulkan screenshot referensi (produk sejenis: SISCOM
-ERP) secara bertahap ke folder `ref-gambar/`, per-menu, untuk jadi acuan struktur & isi
-konten (bukan acuan gaya visual). Cek `CLAUDE.md` § Referensi visual untuk daftar yang
-sudah masuk vs yang masih ditunggu. **Kalau ada file baru di `ref-gambar/` yang belum
-tercatat di log itu, itu artinya dokumen belum sinkron dengan referensi terbaru — proses
-dulu sebelum lanjut kerja di area terkait.**
+**Yang sudah ada (jangan install/setup ulang, cek dulu sebelum asumsi belum ada)**:
+- Laravel 13.24 + PHP 8.4.1, di root project ini (bukan subfolder)
+- MySQL 8.0 lokal (database `leon_phone_rms`, lihat #14 di bawah — bukan MariaDB)
+- Filament 4 dengan native Tenancy aktif (`app/Providers/Filament/AdminPanelProvider.php`
+  → `->tenant(Tenant::class, slugAttribute: 'code')`)
+- `Modules\` namespace ter-daftar di `composer.json` autoload, 18 folder modul dengan
+  sub-folder standar sudah ada (banyak masih kosong/`.gitkeep` — itu wajar, isi sesuai
+  kebutuhan modul masing-masing saat dikerjakan)
+- Tenancy fondasi lengkap & TERUJI: migration `tenants`/`branches`/`tenant_user`/
+  `warehouses`, model `Modules\Shared\Models\Tenant`, `Modules\MasterData\Models\{Branch,Warehouse}`,
+  trait `Modules\Shared\Traits\BelongsToTenant` (auto-fill + global scope), service
+  `Modules\Shared\Support\TenantContext` (baca dari `Filament::getTenant()`, override
+  manual untuk test/artisan/API nanti)
+- `Modules\Shared\Exceptions\DomainException` (base) + 2 contoh subclass
+  (`InsufficientStockException`, `ImeiAlreadyExistsException`) + Handler mapping JSON di
+  `bootstrap/app.php` (API/webhook) + trait `CatchesDomainExceptions` (pola notifikasi
+  Filament, dipakai nanti saat ada Filament action pertama)
+- Audit log generik: trait `Modules\Shared\Traits\Auditable` + `AuditLogObserver`, TERUJI
+  (created/updated/deleted semua tercatat). **Catatan teknis penting**: JANGAN pakai
+  `static::observe()` di dalam `boot{Trait}()` — itu memicu `new static` yang bikin
+  Laravel error "may not be called on model while it is being booted" (re-entrancy).
+  Pakai `static::created()`/`updated()`/`deleted()` langsung, lihat implementasinya di
+  `Auditable.php` untuk pola yang benar.
+- Pulse aktif, Reverb aktif (broadcasting=reverb, npm `laravel-echo`+`pusher-js`
+  terinstall), Telescope **hanya register di local/staging** (lihat
+  `AppServiceProvider::register()` — BUKAN di `bootstrap/providers.php`, sengaja supaya
+  tidak boot sama sekali di production, bukan cuma di-gate akses)
+- Pint bersih, Larastan level 5 bersih (1 info "trait unused" untuk
+  `CatchesDomainExceptions` — wajar, belum ada consumer, bukan bug), PHPUnit 8 test lulus
+  (unit: DomainException; feature: isolasi tenant + rollback transaksi — lihat
+  `tests/Feature/Modules/MasterData/BranchTenantIsolationTest.php` sebagai TEMPLATE pola
+  testing tenant untuk modul lain), skeleton `tests/k6/` + 1 script jalan (`_shared/smoke.js`)
+
+**Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, resource Filament
+apapun (belum ada satu Resource/Page pun), route API (`routes/api.php` belum dibuat),
+model bisnis modul manapun selain Tenant/Branch/Warehouse (Product, Order, IMEI, dll semua
+masih kosong), seeder data contoh, deployment/hosting apapun.
+
+**Sedang berlangsung (independen dari progress coding di atas)**: user mengumpulkan
+screenshot referensi (produk sejenis: SISCOM ERP) secara bertahap ke folder `ref-gambar/`,
+per-menu, untuk jadi acuan struktur & isi konten (bukan acuan gaya visual). Cek `CLAUDE.md`
+§ Referensi visual untuk daftar yang sudah masuk vs yang masih ditunggu. **Kalau ada file
+baru di `ref-gambar/` yang belum tercatat di log itu, itu artinya dokumen belum sinkron
+dengan referensi terbaru — proses dulu sebelum lanjut kerja di area terkait.**
 
 ## Log keputusan (kronologis)
 
@@ -139,6 +177,25 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       "MySQL 8.0" mengikuti keputusan ini.
     - Poin #2 di atas dibiarkan tercatat apa adanya (bukan dihapus) — sama prinsipnya
       dengan pembalikan-pembalikan lain di log ini.
+
+15. **Fase 1 mulai dieksekusi** ("bikin base laravel nya dulu yang lengkap biar ai koding
+    sudah punya basic yang bagus dan proper"). Laravel di-install LANGSUNG di root project
+    ini (bukan monorepo/subfolder terpisah — konsisten dengan keputusan #12, satu
+    codebase). Database dinamai `leon_phone_rms`. Detail lengkap apa yang sudah dibangun
+    & TERUJI ada di § Status saat ini di atas — jangan duplikasi di sini, itu yang selalu
+    di-update tiap sesi kerja, bagian log ini isinya histori keputusan saja.
+
+16. **Repo GitHub dibuat & di-push**: `github.com/wicaksuu/leon-phone`, branch `main`.
+    User memberi personal access token GitHub langsung di chat untuk push pertama.
+    **Token TIDAK disimpan mentah di `.git/config`** — dipakai untuk `gh auth login`
+    sekali (tersimpan di macOS Keychain lewat `gh`), lalu `gh auth setup-git` supaya git
+    push berikutnya otomatis lewat credential helper `gh`, bukan token di URL remote.
+    **Catatan keamanan yang perlu disampaikan ke user** (kalau sesi berikutnya belum
+    lihat ini ditindaklanjuti): token yang diberikan scope-nya sangat luas (`admin:org`,
+    `delete_repo`, `admin:enterprise`, dst — jauh lebih dari sekadar `repo` yang
+    dibutuhkan untuk push). Karena token itu sempat ditulis plaintext di chat, idealnya
+    di-revoke dan diganti token baru dengan scope minimal (`repo` saja cukup) begitu ada
+    kesempatan — ini belum ditindaklanjuti di sesi ini, cek apakah user sudah lakukan.
 
 ## Pending / belum diputuskan
 
