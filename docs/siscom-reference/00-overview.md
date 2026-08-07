@@ -7,11 +7,12 @@
 > **BUKAN gap metode, tapi TERKONFIRMASI KOSONG**: tenant "leon" baru pakai Faktur
 > Penjualan (SI) + Faktur Pembelian (PI) + master data dasar, belum pernah menyentuh alur
 > Quote→Order→Delivery (SQ/SO/DO/PQ/PO/RO/PR), AP/AR down payment, cash/bank/giro, jurnal
-> manual, atau stock opname/adjust/transfer — dicek satu-satu via submit form filter, 0
-> baris data. Satu pengecualian (`coaListing`) pakai arsitektur AJAX terpisah yang belum
-> ditelusuri. Halaman "murni form aksi" (~21 halaman non-listing, mis. `changePeriod`,
-> `eFakturForm`) juga belum di-audit detail fieldnya — lihat `docs/00-status.md` #21-24
-> untuk kronologi.
+> manual, atau stock opname/adjust/transfer — dicek satu-satu via submit form filter
+> (termasuk `coaListing`/Kode Perkiraan, dicek 2x lipat dgn klik LANGSUNG tombol Cari di
+> halaman live, bukan cuma reconstruction — modul Akunting memang belum dikonfigurasi
+> tenant ini), semua hasilnya 0 baris data. Halaman "murni form aksi" (~21 halaman
+> non-listing, mis. `changePeriod`, `eFakturForm`) juga belum di-audit detail fieldnya —
+> lihat `docs/00-status.md` #21-25 untuk kronologi.
 >
 > **Metode**: bukan klik manual — fetch HTML mentah tiap URL menu (`fetch(url,
 > {credentials:'include'})` dari dalam browser yang sudah login user), parse via

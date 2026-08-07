@@ -2,10 +2,10 @@
 
 > **Status: 21 dari 82 halaman** berhasil diverifikasi dengan URL edit REAL (bukan tebakan)
 > + field-nya diambil (naik dari 15 setelah user mengonfirmasi submit form filter/cari
-> boleh dilakukan — lihat `docs/00-status.md` #23-24). Sisanya sebagian besar **TERKONFIRMASI
-> KOSONG** (tenant "leon" belum pernah pakai modul itu — bukan gagal diaudit, tapi memang
-> tidak ada datanya) dan sebagian kecil pakai arsitektur AJAX terpisah yang belum
-> ditelusuri — lihat rincian di bawah.
+> boleh dilakukan — lihat `docs/00-status.md` #23-25). Sisanya (26 halaman, termasuk
+> `coaListing`) **TERKONFIRMASI KOSONG** — tenant "leon" belum pernah pakai modul itu,
+> dicek satu-satu (bukan diasumsikan), bukan gagal diaudit. Tidak ada lagi halaman dgn
+> status "arsitektur belum ditelusuri" — semua sudah selesai diklasifikasi.
 
 ## Cara URL Edit ditemukan (metode BEDA dari form Tambah)
 
@@ -174,10 +174,10 @@ Recurring)**:
 `stockOpnameListing`, `transferWhListing`, `transferTempListing`, `reListing`,
 `promoListing`, `rawMaterialListing`, `finMaterialListing`, `sizeListing`,
 `salesPriceGroupListing`, `bankTransactionListing`, `chequeTransactionListing`,
-`poCloseListing`, `soCloseListing` (dan kemungkinan besar `pqCloseListing`/
-`sqCloseListing` juga kosong dgn alasan sama — tidak dicek satu-satu, karena "Tutup"
-transaksi cuma mungkin ada kalau transaksi sumbernya sendiri ada, dan sumbernya
-(PQ/SQ) sudah terkonfirmasi 0).
+`poCloseListing`, `soCloseListing`, **`coaListing`** (dan kemungkinan besar
+`pqCloseListing`/`sqCloseListing` juga kosong dgn alasan sama — tidak dicek satu-satu,
+karena "Tutup" transaksi cuma mungkin ada kalau transaksi sumbernya sendiri ada, dan
+sumbernya (PQ/SQ) sudah terkonfirmasi 0).
 
 **Implikasi untuk audit**: field/struktur form Edit utk semua modul di atas TIDAK BISA
 diverifikasi dari data live (tidak ada recordnya). Kalau dibutuhkan detail field Edit-nya,
@@ -187,8 +187,20 @@ dicek bahwa Edit = Tambah yang di-reuse, jadi asumsi ini cukup wajar dipakai sbg
 TAPI belum terverifikasi 100% utk modul-modul ini secara spesifik.
 
 ## Belum tertelusuri (arsitektur AJAX beda, bukan soal data kosong)
-`coaListing` (Chart of Accounts) — table kosong bahkan di response GET awal, kemungkinan
-data dimuat lewat AJAX endpoint terpisah (pola sama dgn `goodsListing`/
-`Mpersediaan/getGoodsList`) yang belum ditelusuri. COA jelas ADA datanya (Fixed Assets
-`addFa`/`editFaForm` sudah konfirmasi py referensi akun aktif) — ini murni keterbatasan
-metode, bukan temuan "kosong".
+`goodsListing` — table kosong di initial HTML dan di POST-balik-ke-diri-sendiri, karena
+datanya dimuat lewat AJAX endpoint terpisah (`Mpersediaan/getGoodsList`) yang butuh
+payload spesifik. **Sudah diakali** dgn endpoint pencarian barang
+`Utility/searchBarangNama` (lihat di atas), jadi bukan gap lagi.
+
+`coaListing` **sudah dicek ulang dan TERKONFIRMASI KOSONG** (bukan gap arsitektur seperti
+dugaan awal) — diverifikasi 2 cara: (1) `fetch()` POST reconstruction hasilnya 0 baris,
+(2) klik LANGSUNG tombol "Cari" di halaman live (bukan reconstruction) → tetap 0 baris,
+`datatable_col_reorder_info` menunjukkan literal "0 - 0 dari 0 data". Jaringan (network
+requests) saat page load juga cuma menunjukkan 1 request (dokumen `coaListing` itu
+sendiri) — tidak ada AJAX endpoint terpisah yang dipanggil, artinya `coaListing` PAKAI
+pola yang sama dgn `siListing`/`piListing` (POST balik ke URL sendiri), bukan pola
+`goodsListing`. Kesimpulan: modul **Akunting (Kode Perkiraan/COA) belum dikonfigurasi
+sama sekali** di tenant "leon" — konsisten dgn temuan Journal/CashBank/StockOpname yang
+juga semuanya kosong (modul Akunting & sebagian besar transaksi belum disentuh). Field
+`ACNO` di `addFa`/`editFaForm` kemungkinan besar cuma input teks bebas (tidak divalidasi
+terhadap tabel COA riil) — makanya Fixed Assets bisa py data padahal COA kosong.

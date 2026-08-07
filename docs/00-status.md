@@ -517,6 +517,29 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
     - Hasil lengkap → `docs/siscom-reference/04-edit-form-fields.md` (ditulis
       ulang, bukan cuma ditambah). `html/` sekarang 143 file.
 
+25. **Menutup pertanyaan terbuka `coaListing` dari #24** (permintaan user: "lanjut coba
+    cari cara akses coaListing"). Dugaan awal (#24: "arsitektur AJAX terpisah, belum
+    ditelusuri, kemungkinan besar ADA datanya") **ternyata salah** — dicek ulang 2 cara:
+    (1) network request inspection saat page load `coaListing` cuma menunjukkan 1
+    request (dokumen itu sendiri, tidak ada AJAX endpoint terpisah dipanggil); (2) klik
+    LANGSUNG tombol "Cari" di halaman live (bukan `fetch()` reconstruction) tetap
+    menghasilkan **"0 - 0 dari 0 data"**. Kesimpulan final: `coaListing` pakai pola yang
+    SAMA dgn `siListing`/`piListing` (POST balik ke URL sendiri), cuma memang **genuinely
+    kosong** — modul Akunting (Kode Perkiraan/COA) belum dikonfigurasi sama sekali di
+    tenant "leon", konsisten dgn Journal/CashBank/StockOpname yang juga kosong (modul
+    Akunting & sebagian besar transaksi belum disentuh tenant ini). Field `ACNO` di
+    `addFa`/`editFaForm` (yang sempat dikira bukti COA py data) kemungkinan cuma input
+    teks bebas, tidak divalidasi terhadap tabel COA riil — jadi Fixed Assets bisa py
+    data meski COA-nya sendiri kosong.
+    - **Tidak ada lagi halaman edit dgn status "belum tertelusuri"** — semua 82 halaman
+      sekarang terklasifikasi jelas: 21 terverifikasi dgn data real, ~26 terkonfirmasi
+      kosong (termasuk `coaListing` sekarang), sisanya form aksi murni (bukan
+      listing+edit) atau belum diminta user untuk diaudit lebih jauh.
+    - Update di `docs/siscom-reference/04-edit-form-fields.md` — pindah `coaListing`
+      dari section "belum tertelusuri" ke "terkonfirmasi kosong", ditulis dgn metode
+      verifikasi ganda (POST reconstruction + klik live) supaya jelas ini bukan
+      asumsi/tebakan.
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di
