@@ -448,6 +448,42 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
       sempat ke-truncate outputnya di sesi sebelumnya (isi filenya identik, bukan
       hilang data — cuma nama file dobel).
 
+23. **Mulai audit form Edit** (permintaan user: "lanjut audit form Edit juga") — beda
+    metode dari form Tambah karena butuh ID record ASLI (bukan cuma 1 URL statis per
+    halaman). Ditemukan 2 pola render listing SISCOM: (a) **server-rendered** — HTML
+    awal sudah berisi baris data asli + href edit valid, ID bisa langsung diambil dari
+    `html/` tanpa fetch tambahan; (b) **client-rendered via AJAX** — HTML awal cuma
+    kerangka kosong, baris baru muncul setelah AJAX terpanggil.
+    - Untuk pola (b), dicek via network inspection di `soListing`: **AJAX list data
+      TIDAK auto-terpanggil saat page load** — baru terpanggil setelah user submit
+      form filter/cari. Ini berlaku untuk hampir semua modul TRANSAKSI (SO, SI, PO,
+      PQ, PR, RO, PI, DO, SQ, Journal, dll).
+    - **Berhenti di 15/82 halaman edit** (bukan 82) karena mendapat ID record dari
+      modul transaksi butuh submit form filter — di luar batas kerja "GET/navigate
+      saja, jangan submit apapun" yang disepakati sejak awal audit (`docs/00-status.md`
+      #20-21). **Tidak diinterpretasikan sendiri sebagai "aman karena cuma filter"** —
+      sengaja berhenti untuk minta konfirmasi eksplisit user dulu.
+    - 15 halaman yang berhasil (field lengkap + HTML tersimpan) → editWh, editBrand,
+      editUnit, editCc, editBranch, editSupp, editCust, editSalesman, editPayType,
+      editBank, editFa, editUser, editSr, editApPayment, editArReceipt. 1 gagal
+      (editUserMenuForm/L01 → "Database Error", tidak dikejar lebih jauh karena area
+      User/Access Management sensitif untuk uji berulang).
+    - **Temuan pola penting untuk desain**: 14 dari 15 halaman edit punya field SET
+      IDENTIK dengan form Tambah-nya (cuma di-pre-fill) — konfirmasi bahwa 1 komponen
+      form dengan optional `$record` (pola Laravel standar) sudah cukup, TIDAK perlu
+      Blade/form terpisah per Create vs Edit. Beberapa field ekstra ketemu di Edit yang
+      terlewat di ekstraksi Tambah (Kode Pajak di Satuan, Kartu/Uang Muka di Tipe
+      Bayar, Salesman di Retur Penjualan) — kemungkinan cuma soal metode ekstraksi
+      (field di scroll/tab lanjutan), bukan field yang benar-benar cuma ada di Edit.
+    - Hasil lengkap → `docs/siscom-reference/04-edit-form-fields.md` (file baru).
+      `html/` sekarang 137 file (82 listing + 42 add-form + 15 edit-form).
+    - **PERTANYAAN TERBUKA untuk sesi berikutnya / user**: apakah submit form
+      filter/cari (search-only, TIDAK create/update/delete apapun) dianggap masih
+      dalam batas aman audit ini? Kalau ya, ~65 halaman transaksi sisanya bisa
+      dilanjutkan dengan metode itu. Kalau tidak, form Edit modul transaksi
+      dianggap TIDAK BISA diaudit lewat live app tanpa risiko melanggar batas kerja
+      yang diminta user — perlu cara lain (mis. user sendiri yang screenshot/export).
+
 ## Pending / belum diputuskan
 
 Lihat `CLAUDE.md` § Belum diputuskan untuk daftar lengkap & terbaru — jangan duplikasi di
