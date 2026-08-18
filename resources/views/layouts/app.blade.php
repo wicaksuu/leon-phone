@@ -20,63 +20,49 @@
 
     <!-- Preline Dark/Light Mode Switcher Script -->
     <script>
-        const HSThemeAppearance = {
-            init() {
-                const defaultTheme = 'default'
-                let theme = localStorage.getItem('hs_theme') || defaultTheme
+        // Inisialisasi tema sebelum halaman dirender untuk menghindari kedipan putih (FOUC)
+        (function() {
+            const theme = localStorage.getItem('hs_theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
 
-                if (document.querySelector('html').classList.contains('dark')) return
-                this.setAppearance(theme)
-            },
-            _removeClasses() {
-                document.querySelector('html').classList.remove('dark')
-                document.querySelector('html').classList.remove('default')
-            },
-            setAppearance(theme, saveInStore = true, dispatchEvent = true) {
-                const html = document.querySelector('html')
-                this._removeClasses()
+        // Fungsi toggle tema global
+        function toggleTheme(theme) {
+            const html = document.documentElement;
+            const darkToggle = document.getElementById('dark-theme-toggle');
+            const lightToggle = document.getElementById('light-theme-toggle');
 
-                if (theme === 'dark') {
-                    html.classList.add('dark')
-                } else if (theme === 'default') {
-                    html.classList.add('default')
-                }
-
-                if (saveInStore) {
-                    localStorage.setItem('hs_theme', theme)
-                }
-
-                if (dispatchEvent) {
-                    window.dispatchEvent(new CustomEvent('on-hs-appearance-change', { detail: theme }))
-                }
-            },
-            getAppearance() {
-                let theme = localStorage.getItem('hs_theme')
-                if (theme) return theme
-                return 'default'
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                localStorage.setItem('hs_theme', 'dark');
+                if (darkToggle) darkToggle.style.display = 'none';
+                if (lightToggle) lightToggle.style.display = 'block';
+            } else {
+                html.classList.remove('dark');
+                localStorage.setItem('hs_theme', 'light');
+                if (darkToggle) darkToggle.style.display = 'block';
+                if (lightToggle) lightToggle.style.display = 'none';
             }
         }
 
-        HSThemeAppearance.init()
+        // Sinkronisasi status tampilan tombol pertama kali saat DOM selesai dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('hs_theme') || 'light';
+            const darkToggle = document.getElementById('dark-theme-toggle');
+            const lightToggle = document.getElementById('light-theme-toggle');
 
-        window.addEventListener('load', () => {
-            const $clickableThemes = document.querySelectorAll('[data-hs-theme-click-value]')
-            const $switchableThemes = document.querySelectorAll('[data-hs-theme-switch]')
-
-            $clickableThemes.forEach($item => {
-                $item.addEventListener('click', () => {
-                    const theme = $item.getAttribute('data-hs-theme-click-value')
-                    // Preline 'light' di template seringkali diset sebagai 'default'
-                    HSThemeAppearance.setAppearance(theme === 'light' ? 'default' : theme)
-                })
-            })
-
-            $switchableThemes.forEach($item => {
-                $item.addEventListener('change', (e) => {
-                    HSThemeAppearance.setAppearance(e.target.checked ? 'dark' : 'default')
-                })
-            })
-        })
+            if (theme === 'dark') {
+                if (darkToggle) darkToggle.style.display = 'none';
+                if (lightToggle) lightToggle.style.display = 'block';
+            } else {
+                if (darkToggle) darkToggle.style.display = 'block';
+                if (lightToggle) lightToggle.style.display = 'none';
+            }
+        });
     </script>
 
     <style>

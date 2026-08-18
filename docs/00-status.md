@@ -7,67 +7,39 @@
 
 ## Status saat ini
 
-**Fase: 1 (Fondasi) — SEDANG BERJALAN, PERUBAHAN ARAH TECH STACK.** Blueprint (`CLAUDE.md`
+**Fase: 1 (Fondasi) — SEDANG BERJALAN, PERUBAHAN ARAH TECH STACK & MODUL PERSYARATAN.** Blueprint (`CLAUDE.md`
 + `docs/*`) sudah matang. Repo:
 [github.com/wicaksuu/leon-phone](https://github.com/wicaksuu/leon-phone) (branch `main`).
-**Perubahan besar**: Filament **di-drop sepenuhnya** (lihat #19 di log keputusan), diganti
-Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + layout custom ala Nexus Dashboard.
+**Perubahan besar**: Filament **di-drop sepenuhnya** (lihat #19 dan #28 di log keputusan), diganti
+Tailwind CSS 4 + Preline UI 3.0 + Laravel Breeze + layout custom ala template **Tailwind-Admin**.
 
 **Yang sudah ada (jangan install/setup ulang, cek dulu sebelum asumsi belum ada)**:
 - Laravel 13.24 + PHP 8.4.1, di root project ini (bukan subfolder)
 - MySQL 8.0 lokal (database `leon_phone_rms`, lihat #14 di bawah — bukan MariaDB)
-- ~~Filament 4 dengan native Tenancy aktif~~ **USANG — akan dihapus** (lihat #19).
-  Diganti Tailwind CSS 4 + DaisyUI 5 + Laravel Breeze + layout Nexus Dashboard
-- `Modules\` namespace ter-daftar di `composer.json` autoload, 18 folder modul dengan
-  sub-folder standar sudah ada (banyak masih kosong/`.gitkeep` — itu wajar, isi sesuai
-  kebutuhan modul masing-masing saat dikerjakan)
 - Tenancy fondasi lengkap & TERUJI: migration `tenants`/`branches`/`tenant_user`/
   `warehouses`, model `Modules\Shared\Models\Tenant`, `Modules\MasterData\Models\{Branch,Warehouse}`,
   trait `Modules\Shared\Traits\BelongsToTenant` (auto-fill + global scope), service
-  `Modules\Shared\Support\TenantContext` (~~baca dari `Filament::getTenant()`~~ akan
-  diubah ke session-based, lihat #19; override manual untuk test/artisan/API nanti)
+  `Modules\Shared\Support\TenantContext` (baca dari session-based, lihat #19; override manual untuk test/artisan/API nanti)
 - `Modules\Shared\Exceptions\DomainException` (base) + 2 contoh subclass
   (`InsufficientStockException`, `Modules\SerialNumber\Exceptions\DuplicateSerialUnitException`
-  — nama terbaru, lihat #18) + Handler mapping JSON di `bootstrap/app.php` (API/webhook) +
-  trait `CatchesDomainExceptions` (~~pola notifikasi Filament~~ akan diubah ke DaisyUI
-  toast/alert, lihat #19)
+  — nama terbaru, lihat #18) + Handler mapping JSON di `bootstrap/app.php` (API/webhook)
 - Audit log generik: trait `Modules\Shared\Traits\Auditable` + `AuditLogObserver`, TERUJI
-  (created/updated/deleted semua tercatat). **Catatan teknis penting**: JANGAN pakai
-  `static::observe()` di dalam `boot{Trait}()` — itu memicu `new static` yang bikin
-  Laravel error "may not be called on model while it is being booted" (re-entrancy).
-  Pakai `static::created()`/`updated()`/`deleted()` langsung, lihat implementasinya di
-  `Auditable.php` untuk pola yang benar.
+  (created/updated/deleted semua tercatat).
 - Pulse aktif, Reverb aktif (broadcasting=reverb, npm `laravel-echo`+`pusher-js`
-  terinstall), Telescope **hanya register di local/staging** (lihat
-  `AppServiceProvider::register()` — BUKAN di `bootstrap/providers.php`, sengaja supaya
-  tidak boot sama sekali di production, bukan cuma di-gate akses)
-- Pint bersih, Larastan level 5 bersih (1 info "trait unused" untuk
-  `CatchesDomainExceptions` — wajar, belum ada consumer, bukan bug), PHPUnit 8 test lulus
-  (unit: DomainException; feature: isolasi tenant + rollback transaksi — lihat
-  `tests/Feature/Modules/MasterData/BranchTenantIsolationTest.php` sebagai TEMPLATE pola
-  testing tenant untuk modul lain), skeleton `tests/k6/` + 1 script jalan (`_shared/smoke.js`)
-- ~~**Navigasi sidebar lengkap** (`docs/00-status.md` #17): 27 halaman placeholder di
-  `app/Filament/Pages/*Page.php`~~ **USANG — akan dihapus dan diganti** (lihat #19).
-  Placeholder Filament ini akan diganti dengan Blade view + controller/Livewire component
-  menggunakan layout drawer-based DaisyUI (Nexus Dashboard pattern).
-- **Modul "IMEI Management" sudah di-rename jadi "Serial Number Management"** (`docs/00-status.md`
-  #18) — `Modules/Imei/` **tidak ada lagi**, sekarang `Modules/SerialNumber/`. Kalau lihat
-  referensi ke `Modules\Imei\...` di kode manapun (seharusnya tidak ada lagi setelah rename
-  ini), itu bug/sisa lama yang harus diperbaiki, bukan pola yang harus diikuti.
+  terinstall), Telescope hanya register di local/staging.
+- Pint bersih, Larastan level 5 bersih, PHPUnit test lulus **100% (Passed - 29 tes, 150 asersi)**.
+- **Layout Utama & Tema Switcher**: Menggunakan framework layout visual premium dari template Tailwind-Admin (Preline UI 3.0). Switcher mode gelap (Dark/Light) global berjalan persisten menggunakan vanilla JS tanpa kedipan (FOUC).
+- **Dashboard Visual Identik SISCOM ERP**: Halaman dashboard utama (`/dashboard`) telah diprogram ulang agar isinya identik secara fungsional dan data statistik dengan dashboard referensi SISCOM ERP, didukung jam berjalan dinamis serta 3 Chart interaktif (Chart.js) untuk Best Seller, Hutang vs Piutang, dan Tren Laba/Rugi.
+- **Modul Persediaan (Inventory) Selesai Visual & Testing**: Ke-15 halaman visual Blade modul persediaan (Master Satuan, Master Ukuran, Kelompok Barang, Master Brand, Master Barang, Kelompok Harga Jual, Master Gudang, Cetak Barcode, Stok Opname, Transfer Sementara, Transfer Gudang, Penyesuaian Stok, Perakitan Pemakaian Bahan Baku, Perakitan Penyelesaian Barang Jadi, Laporan Status S/N) telah diimplementasikan penuh pada rute `/inventory/*` melalui `InventoryController` dan terverifikasi sukses lewat unit test otomatis `InventoryListingTest.php`.
 
-**Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, **isi asli** di
-balik 27 halaman navigasi (semua masih placeholder "belum dibangun"), route API
+**Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, route API
 (`routes/api.php` belum dibuat), model bisnis modul manapun selain Tenant/Branch/Warehouse
 (Product, Order, SerialUnit, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
-user percobaan lokal untuk testing manual, lihat #17), deployment/hosting apapun, layout
-DaisyUI/Nexus Dashboard (belum diimplementasi, baru di-blueprint — lihat #19).
+user percobaan lokal untuk testing manual), deployment/hosting.
 
-**Sedang berlangsung (independen dari progress coding di atas)**: user mengumpulkan
-screenshot referensi (produk sejenis: SISCOM ERP) secara bertahap ke folder `ref-gambar/`,
-per-menu, untuk jadi acuan struktur & isi konten (bukan acuan gaya visual). Cek `CLAUDE.md`
-§ Referensi visual untuk daftar yang sudah masuk vs yang masih ditunggu. **Kalau ada file
-baru di `ref-gambar/` yang belum tercatat di log itu, itu artinya dokumen belum sinkron
-dengan referensi terbaru — proses dulu sebelum lanjut kerja di area terkait.**
+**Langkah berikutnya**:
+1. Merancang dan menghubungkan database dinamis untuk modul Persediaan (seperti migrasi tabel `product_units`, `brands`, `goods`, dll., ke database `leon_phone_rms` agar form tambah/edit data pada 15 halaman visual persediaan dapat menyimpan dan memperbarui data secara dinamis).
+2. Melanjutkan pembuatan modul bisnis retail berikutnya (modul Pembelian / Purchasing) sesuai prioritas roadmap.
 
 ## Log keputusan (kronologis)
 
@@ -629,6 +601,14 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
     - Aset visual dan layout (sidebar & header) mengadopsi struktur template Tailwind-Admin (versi HTML Free).
     - Pustaka komponen interaktif (seperti dropdown, modal, collapse) menggunakan **Preline UI 3.0** (vanilla JavaScript `preline.js`) yang berjalan di atas Tailwind CSS 4, menggantikan DaisyUI 5.
     - Pustaka ini akan diintegrasikan ke dalam ekosistem aset Laravel saat proses inisialisasi dilakukan.
+
+29. **Pengaktifan Mode Gelap (Dark Mode) Manual Persisten.** Perbaikan fungsionalitas tombol/toggle mode gelap di layout agar dapat beralih secara langsung tanpa FOUC (kedipan). Ditangani dengan menyisipkan `@custom-variant dark (&:where(.dark, .dark *));` pada CSS utama Tailwind v4 dan memprogram ulang fungsi vanilla JS `toggleTheme` global yang melacak kelas `.dark` di `<html>` dan disimpan persisten di `localStorage`.
+
+30. **Penyelarasan Menu Sidebar Bertingkat (Nested Accordion).** Struktur sidebar disinkronkan secara penuh dengan modul navigasi di referensi SISCOM ERP (9 modul utama). Sub-menu berjenjang level-3 (nested sub-menu) seperti pada modul Perakitan, Hutang Dagang, dan Piutang Dagang diimplementasikan menggunakan nested accordion Preline UI dengan margin indentasi visual yang indah.
+
+31. **Pembuatan Dashboard Visual Premium Identik SISCOM ERP.** Halaman dashboard utama (`/dashboard`) didesain ulang agar menyajikan informasi yang identik dengan dashboard referensi SISCOM ERP, mencakup Widget Info Perusahaan dinamis, Jam Berjalan Dinamis, Log Aktivitas Terakhir, Best Seller dengan Donut Chart, 4 Card Keuangan Utama, Chart Bar untuk Hutang vs Piutang, serta Chart Line untuk tren Laba/Rugi.
+
+32. **Implementasi Modul Persediaan (Inventory) Visual Lengkap (15 Halaman).** Ke-15 halaman visual modul persediaan telah selesai diimplementasikan sepenuhnya pada perutean `/inventory/*` yang dikelola oleh `InventoryController` terpadu. Seluruh halaman telah sukses diuji via feature test otomatis `InventoryListingTest.php` (29 tes, 150 asersiPassed 100%).
 
 ## Pending / belum diputuskan
 

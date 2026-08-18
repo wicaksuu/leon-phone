@@ -51,10 +51,10 @@
         </div>
 
         <!-- Dark Mode Toggle -->
-        <button type="button" class="hs-dark-mode-active:hidden block text-gray-500 hover:text-gray-600 focus:outline-none rounded-lg p-2 dark:text-neutral-400 dark:hover:text-neutral-300" data-hs-theme-click-value="dark">
+        <button type="button" onclick="toggleTheme('dark')" class="hs-dark-mode-active:hidden block text-gray-500 hover:text-gray-600 focus:outline-none rounded-lg p-2 dark:text-neutral-400 dark:hover:text-neutral-300" id="dark-theme-toggle">
             <iconify-icon icon="solar:moon-linear" class="text-xl"></iconify-icon>
         </button>
-        <button type="button" class="hs-dark-mode-active:block hidden text-gray-500 hover:text-gray-600 focus:outline-none rounded-lg p-2 dark:text-neutral-400 dark:hover:text-neutral-300" data-hs-theme-click-value="light">
+        <button type="button" onclick="toggleTheme('light')" class="hs-dark-mode-active:block hidden text-gray-500 hover:text-gray-600 focus:outline-none rounded-lg p-2 dark:text-neutral-400 dark:hover:text-neutral-300" id="light-theme-toggle">
             <iconify-icon icon="solar:sun-2-linear" class="text-xl"></iconify-icon>
         </button>
 

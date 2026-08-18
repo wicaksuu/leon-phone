@@ -41,19 +41,19 @@ class DashboardLayoutTest extends TestCase
         $response->assertSee('LEON PHONE');
 
         // Verifikasi keberadaan komponen-komponen UI Kit yang baru dibuat
-        $response->assertSee('Selamat Datang Kembali');
-        $response->assertSee('Pegawai');
-        $response->assertSee('Pelanggan');
-        $response->assertSee('Aset Tetap');
-        $response->assertSee('Pesanan Pending');
+        $response->assertSee('Info Data Perusahaan');
+        $response->assertSee('LEON SELLULAR INDONESIA');
+        $response->assertSee('Aktivitas Terakhir Anda');
+        $response->assertSee('Best Seller');
         
-        // Verifikasi tabel dan baris data transaksi simulasi
-        $response->assertSee('SI-2026-0001');
-        $response->assertSee('Budi Santoso');
-        $response->assertSee('LUNAS');
+        // Verifikasi tabel dan baris data transaksi/produk simulasi
+        $response->assertSee('REALME 10 PRO+');
+        $response->assertSee('INFINIX SMART 20');
         
-        // Verifikasi input dan tombol kustom Preline
-        $response->assertSee('Kode Scanner (Barcode/IMEI)');
-        $response->assertSee('Batal');
+        // Verifikasi nilai statistik keuangan
+        $response->assertSee('Penjualan');
+        $response->assertSee('Pembelian');
+        $response->assertSee('Piutang Dagang (Outs)');
+        $response->assertSee('Hutang Dagang (Outs)');
     }
 }
