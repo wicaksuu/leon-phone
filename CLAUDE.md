@@ -117,9 +117,8 @@ Yang sudah masuk sejauh ini:
 ## Belum diputuskan (tanyakan ke user sebelum asumsi)
 
 - Versi PHP spesifik saat mulai coding (Laravel-nya sudah pasti versi terbaru)
-- Hosting/deployment target (VPS, shared hosting, cloud?) — **catatan: karena Reverb
-  dipakai (`docs/03-architecture.md` § Observability & Realtime), butuh proses
-  long-running terpisah dari PHP-FPM, jadi shared hosting biasa kemungkinan tidak cukup**
+- Hosting/deployment target: **Hostinger Shared Hosting** (Domain: [leon-phone.wicak.id](https://leon-phone.wicak.id)). Aplikasi telah berhasil terdeploy dengan struktur folder terpisah (`laravel/` dan symlink `public_html`).
+  * *Catatan Reverb:* Karena Reverb memerlukan proses long-running daemon (yang biasanya tidak didukung di shared hosting biasa), broadcasting real-time menggunakan Reverb saat ini dinonaktifkan/ditunda di produksi hingga migrasi ke VPS dilakukan di fase berikutnya.
 - Integrasi marketplace mana yang jadi prioritas pertama (Shopee/Tokopedia/TikTok/dll)
 - Payment gateway untuk QRIS/transfer otomatis
 - Apakah butuh printer thermal driver khusus atau cukup browser print

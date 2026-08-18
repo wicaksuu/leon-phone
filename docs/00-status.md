@@ -31,11 +31,12 @@ Tailwind CSS 4 + Preline UI 3.0 + Laravel Breeze + layout custom ala template **
 - **Layout Utama & Tema Switcher**: Menggunakan framework layout visual premium dari template Tailwind-Admin (Preline UI 3.0). Switcher mode gelap (Dark/Light) global berjalan persisten menggunakan vanilla JS tanpa kedipan (FOUC).
 - **Dashboard Visual Identik SISCOM ERP**: Halaman dashboard utama (`/dashboard`) telah diprogram ulang agar isinya identik secara fungsional dan data statistik dengan dashboard referensi SISCOM ERP, didukung jam berjalan dinamis serta 3 Chart interaktif (Chart.js) untuk Best Seller, Hutang vs Piutang, dan Tren Laba/Rugi.
 - **Modul Persediaan (Inventory) Selesai Visual & Testing**: Ke-15 halaman visual Blade modul persediaan (Master Satuan, Master Ukuran, Kelompok Barang, Master Brand, Master Barang, Kelompok Harga Jual, Master Gudang, Cetak Barcode, Stok Opname, Transfer Sementara, Transfer Gudang, Penyesuaian Stok, Perakitan Pemakaian Bahan Baku, Perakitan Penyelesaian Barang Jadi, Laporan Status S/N) telah diimplementasikan penuh pada rute `/inventory/*` melalui `InventoryController` dan terverifikasi sukses lewat unit test otomatis `InventoryListingTest.php`.
+- **Deployment & Hosting**: Telah berhasil dideploy ke server Hostinger di domain [leon-phone.wicak.id](https://leon-phone.wicak.id) menggunakan Laravel terisolasi di folder `laravel/` dan symlink publik `public_html` ke `public/`. Menggunakan database MySQL Hostinger (`u500541261_leonphone`) dan berjalan lancar pada PHP 8.4.19.
 
 **Belum ada** (jangan asumsi sudah ada): Role & Permission per-tenant, route API
 (`routes/api.php` belum dibuat), model bisnis modul manapun selain Tenant/Branch/Warehouse
 (Product, Order, SerialUnit, dll semua masih kosong), seeder data contoh (kecuali 1 tenant + 1
-user percobaan lokal untuk testing manual), deployment/hosting.
+user percobaan lokal untuk testing manual).
 
 **Langkah berikutnya**:
 1. Merancang dan menghubungkan database dinamis untuk modul Persediaan (seperti migrasi tabel `product_units`, `brands`, `goods`, dll., ke database `leon_phone_rms` agar form tambah/edit data pada 15 halaman visual persediaan dapat menyimpan dan memperbarui data secara dinamis).
@@ -609,6 +610,8 @@ Semua tanggal di bawah ini 2026-08-07 (hari yang sama, sesi awal proyek).
 31. **Pembuatan Dashboard Visual Premium Identik SISCOM ERP.** Halaman dashboard utama (`/dashboard`) didesain ulang agar menyajikan informasi yang identik dengan dashboard referensi SISCOM ERP, mencakup Widget Info Perusahaan dinamis, Jam Berjalan Dinamis, Log Aktivitas Terakhir, Best Seller dengan Donut Chart, 4 Card Keuangan Utama, Chart Bar untuk Hutang vs Piutang, serta Chart Line untuk tren Laba/Rugi.
 
 32. **Implementasi Modul Persediaan (Inventory) Visual Lengkap (15 Halaman).** Ke-15 halaman visual modul persediaan telah selesai diimplementasikan sepenuhnya pada perutean `/inventory/*` yang dikelola oleh `InventoryController` terpadu. Seluruh halaman telah sukses diuji via feature test otomatis `InventoryListingTest.php` (29 tes, 150 asersiPassed 100%).
+
+33. **Deployment ke Hosting Hostinger Berhasil.** Aplikasi dideploy ke server Hostinger di folder `domains/leon-phone.wicak.id/laravel` dengan tautan simbolik `public_html` mengarah ke folder `public/`. PHP web server disesuaikan ke versi PHP 8.4.19 via `.htaccess` karena dependensi memerlukan PHP >= 8.4.1. Akun default `test@example.com` / `password` telah dibuat di database.
 
 ## Pending / belum diputuskan
 

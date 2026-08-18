@@ -25,6 +25,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .server
+deploy.sh
 
 # Raw HTML scraped dari aplikasi SISCOM ERP pihak ketiga (docs/siscom-reference/html/) —
 # disimpan lokal untuk referensi audit, sengaja TIDAK di-commit (isu hak cipta/ToS +
